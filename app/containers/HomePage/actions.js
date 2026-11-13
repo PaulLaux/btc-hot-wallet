@@ -266,8 +266,8 @@ export function generateKeystoreError(error) {
  * Changes the balance of an address; ignored if the address is not in the table
  *
  * @param  {string} address as string
- * @param  {string} balance in sats (confirmed + unconfirmed), as a decimal string
- * @param  {string} unconfirmed the unconfirmed part in sats, negative for pending sends
+ * @param  {string} balance confirmed, in sats, as a decimal string
+ * @param  {string} unconfirmed the change not in a block yet, in sats: negative for pending sends
  *
  * @return {object} An action object with a type of CHANGE_BALANCE with address and balances
  */

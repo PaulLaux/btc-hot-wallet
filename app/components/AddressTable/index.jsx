@@ -53,7 +53,7 @@ function AddressTable(props) {
     key: address,
     address,
     balance: formatBalance(balance),
-    // part of the balance: incoming payments (+) or sends (-) not in a block yet
+    // not in the balance yet: incoming payments (+) or sends (-) not in a block
     unconfirmed: unconfirmed && unconfirmed !== '0' ? `${formatBalance(unconfirmed)} unconfirmed` : '',
     convert: convertBalance(balance, exchangeRates, convertTo),
   }));

@@ -11,7 +11,7 @@ describe('AddressTable balance column', () => {
     expect(formatBalance('0')).toBe('0');
     expect(formatBalance('1')).toBe('0.00000001');
     expect(formatBalance('2100000000000000')).toBe('21000000');
-    expect(formatBalance('-80000')).toBe('-0.0008'); // unconfirmed part of a pending send
+    expect(formatBalance('-80000')).toBe('-0.0008'); // unconfirmed change of a pending send
     expect(formatBalance(false)).toBe('n/a');
   });
 });

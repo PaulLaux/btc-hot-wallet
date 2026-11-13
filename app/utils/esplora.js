@@ -43,12 +43,12 @@ export function connect({ chain, apis, genesis, recommendedFees }) {
       if (await get('/block-height/0') !== genesis) throw new Error('The API serves another network');
       return Number(await get('/blocks/tip/height'));
     },
-    /** Balance in sats (confirmed + unconfirmed) and its unconfirmed part as decimal strings; whether ever used */
+    /** Confirmed balance in sats and the unconfirmed change to it, as decimal strings; whether ever used */
     async addressInfo(address) {
       const { chain_stats: confirmed, mempool_stats: pending } = JSON.parse(await get(`/address/${address}`));
       const net = (stats) => stats.funded_txo_sum - stats.spent_txo_sum;
       return {
-        balance: String(net(confirmed) + net(pending)),
+        balance: String(net(confirmed)),
         unconfirmed: String(net(pending)),
         used: confirmed.tx_count + pending.tx_count > 0,
       };

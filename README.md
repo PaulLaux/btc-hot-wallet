@@ -12,7 +12,7 @@ Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) 
 - Fee: slow, normal or fast; transactions signal replace-by-fee
 - Change goes back to the sending address, or to the fee when it is too small for nodes to relay (546 sats, 5460 on Litecoin); coins of 546 sats or less are never spent (they may carry inscriptions)
 - Restoring a seed finds the addresses it used before
-- Balances include unconfirmed transactions, with a note
+- Balances count confirmed transactions only; unconfirmed ones show as a note below
 - Locks itself 15 minutes after unlocking
 - Content Security Policy: the page runs only its own scripts and connects only to its APIs and CoinGecko
 - Networks: Bitcoin, Testnet4, Signet, Litecoin, Litecoin Testnet or offline

@@ -61,10 +61,10 @@ describe('connect', () => {
     await expect(connect(testnet4).height()).rejects.toThrow('The API serves another network');
   });
 
-  it('reads the balance, its unconfirmed part, and whether the address was ever used', async () => {
+  it('reads the confirmed balance, the unconfirmed change, and whether the address was ever used', async () => {
     const stats = (funded, spent, txs) => ({ funded_txo_sum: funded, spent_txo_sum: spent, tx_count: txs });
     stubFetch({ [api(`/address/${address}`)]: [200, { chain_stats: stats(150000, 50000, 3), mempool_stats: stats(20000, 100000, 1) }] });
-    expect(await connect(testnet4).addressInfo(address)).toEqual({ balance: '20000', unconfirmed: '-80000', used: true });
+    expect(await connect(testnet4).addressInfo(address)).toEqual({ balance: '100000', unconfirmed: '-80000', used: true });
     stubFetch({ [api(`/address/${address}`)]: [200, { chain_stats: stats(0, 0, 0), mempool_stats: stats(0, 0, 0) }] });
     expect(await connect(testnet4).addressInfo(address)).toEqual({ balance: '0', unconfirmed: '0', used: false });
   });
