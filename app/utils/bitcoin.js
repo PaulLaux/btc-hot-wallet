@@ -7,7 +7,7 @@ import { HDKey } from '@scure/bip32';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { hex } from '@scure/base';
 
-const networks = { main: btc.NETWORK, test: btc.TEST_NETWORK };
+export const networks = { main: btc.NETWORK, test: btc.TEST_NETWORK };
 const RBF = 0xfffffffd; // signals replace-by-fee: a stuck transaction can be resent with a higher fee
 const DUST = 546n; // coins this small may carry an inscription: never spend them
 
