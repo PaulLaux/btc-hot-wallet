@@ -31,11 +31,11 @@ const initialState = {
   blockNumber: 0,
   availableNetworks: Object.keys(Network),
 
-  checkingBalanceDoneTime: false, // should update after every succesfull balance check
+  checkingBalanceDoneTime: false, // should update after every successful balance check
   checkingBalances: false, // Loading
   checkingBalancesError: false,
 
-  getExchangeRatesDoneTime: false, // should update after every succesfull exchange rate check
+  getExchangeRatesDoneTime: false, // should update after every successful exchange rate check
   getExchangeRatesLoading: false,
   getExchangeRatesError: false,
 };

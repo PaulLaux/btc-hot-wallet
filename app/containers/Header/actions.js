@@ -34,14 +34,14 @@ export function loadNetwork(networkName) {
 }
 
 /**
- * Dispatched when connected to network successfuly by the loadNetwork saga
+ * Dispatched when connected to network successfully by the loadNetwork saga
  *
  * @param  {string} blockNumber The current block number
  *
  * @return {object}      An action object with a type of LOAD_NETWORK_SUCCESS passing the repos
  */
 export function loadNetworkSuccess(blockNumber) {
-  message.success(`Connected sucessfully, current block: ${blockNumber}`);
+  message.success(`Connected successfully, current block: ${blockNumber}`);
   return {
     type: LOAD_NETWORK_SUCCESS,
     blockNumber,
@@ -86,7 +86,7 @@ export function checkBalances() {
  */
 export function checkBalancesSuccess() {
   const timeString = new Date().toLocaleTimeString();
-  // message.success('Balances updated succesfully');
+  // message.success('Balances updated successfully');
   return {
     type: CHECK_BALANCES_SUCCESS,
     timeString,
@@ -139,7 +139,7 @@ export function getExchangeRates() {
  */
 export function getExchangeRatesSuccess() {
   const timeString = new Date().toLocaleTimeString();
-  message.success('Exchange rates updated succesfully');
+  message.success('Exchange rates updated successfully');
   return {
     type: GET_EXCHANGE_RATES_SUCCESS,
     timeString,

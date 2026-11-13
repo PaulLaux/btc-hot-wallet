@@ -41,7 +41,7 @@ function SendProgress({ sendInProgress, sendError, sendTx, txExplorer }) {
   if (sendTx) {
     return (
       <Alert
-        title="Send sucessfull"
+        title="Send successful"
         description={<Span> TX: <br /> <TxLink tx={sendTx} explorer={txExplorer} /> </Span>}
         type="success"
       />

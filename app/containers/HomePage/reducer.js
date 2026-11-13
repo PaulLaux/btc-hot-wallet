@@ -160,7 +160,7 @@ export default createReducer(initialState, (builder) => builder
     Object.assign(s, {
       addressListLoading: false,
       addressListError: false,
-      addressListMsg: 'New address generated succesfully',
+      addressListMsg: 'New address generated successfully',
       keystore: a.keystore,
     });
     s.addressList[a.newAddress] = { balance: false };

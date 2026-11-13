@@ -141,7 +141,7 @@ export function* loadNetwork(action) {
       yield put(setAddresses(keystore.addresses[network.chain], network.chain));
     }
 
-    // actions after succesfull network load :
+    // actions after successful network load :
     yield put(checkBalances());
     yield put(getExchangeRates());
   } catch (err) {

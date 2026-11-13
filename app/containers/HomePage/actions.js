@@ -81,7 +81,7 @@ export function generateWallet() {
   };
 }
 /**
- * New Seed and password genetated successfully
+ * New Seed and password generated successfully
  *
  * @param  {string} seed
  * @param  {string} password The current username
@@ -335,7 +335,7 @@ export function generateAddress() {
 }
 
 /**
- * After successfull address generation add it to the address table
+ * After successful address generation add it to the address table
  *
  * @param {object} keystore the keystore including the new address
  * @param {string} newAddress the new address
@@ -375,7 +375,7 @@ export function generateAddressError(error) {
  * @return {object} An action object with a type of LOCK_WALLET
  */
 export function lockWallet() {
-  message.success('Wallet locked succesfuly');
+  message.success('Wallet locked successfully');
   return {
     type: LOCK_WALLET,
   };
@@ -400,7 +400,7 @@ export function unlockWallet() {
  * @return {object}      An action object with a type of UNLOCK_WALLET_SUCCESS and the password
  */
 export function unlockWalletSuccess(password) {
-  message.success('Wallet unlocked succesfuly');
+  message.success('Wallet unlocked successfully');
   return {
     type: UNLOCK_WALLET_SUCCESS,
     password,
