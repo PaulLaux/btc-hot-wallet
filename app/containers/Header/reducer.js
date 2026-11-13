@@ -5,7 +5,6 @@
  */
 
 import { createReducer } from '@reduxjs/toolkit';
-import { defaultNetwork } from 'utils/constants';
 import {
   LOAD_NETWORK,
   LOAD_NETWORK_SUCCESS,
@@ -28,7 +27,6 @@ const initialState = {
   loading: false,
   error: false,
   networkReady: false, // true only if network initialized and valid keystore attached
-  prevNetworkName: defaultNetwork,
   networkName: 'Offline',
   blockNumber: 0,
   availableNetworks: Object.keys(Network),
@@ -44,8 +42,6 @@ const initialState = {
 
 export default createReducer(initialState, (builder) => builder
   .addCase(LOAD_NETWORK, (s, a) => {
-    // dont change prevNetworkName when going online
-    if (s.networkName !== 'Offline') s.prevNetworkName = s.networkName;
     Object.assign(s, { loading: true, error: false, networkName: a.networkName });
   })
   .addCase(LOAD_NETWORK_SUCCESS, (s, a) => {

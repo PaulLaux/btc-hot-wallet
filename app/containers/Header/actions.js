@@ -57,9 +57,8 @@ export function loadNetworkSuccess(blockNumber) {
  */
 export function loadNetworkError(error) {
   if (error !== offlineModeString) {
-    const err = error.indexOf('Invalid JSON RPC response from host provider') >= 0 ?
-      `${error}, Check Internet connection and connectivity to RPC` : error;
-    message.error(err, 10);
+    // browsers report an unreachable API as 'Failed to fetch' (Chrome) or 'NetworkError when attempting to fetch resource.'
+    message.error(/fetch/i.test(error) ? `${error} Check the Internet connection.` : error, 10);
   }
   return {
     type: LOAD_NETWORK_ERROR,

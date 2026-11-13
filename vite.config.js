@@ -7,10 +7,9 @@ import { coinGeckoPriceApi } from './app/utils/constants.js';
 const app = path.resolve('app');
 
 // Content Security Policy of the production build: code only from the app, network access only to
-// the RPC nodes (with any MAINNET_RPC_URL / SEPOLIA_RPC_URL override) and CoinGecko.
+// the Esplora APIs of the networks and CoinGecko.
 // The dev server goes without: the policy would block its React Refresh script and live-reload socket.
-const servers = new Set([...Object.values(Network).map((n) => n.rpc), coinGeckoPriceApi]
-  .filter((url) => url.startsWith('http'))
+const servers = new Set([...Object.values(Network).flatMap((n) => n.apis), coinGeckoPriceApi]
   .map((url) => new URL(url).origin));
 const csp = [
   "default-src 'self'",
@@ -36,10 +35,8 @@ export default defineConfig({
   resolve: {
     alias: [{ find: /^(components|containers|utils)\//, replacement: `${app}/$1/` }],
   },
-  // Optional RPC overrides (see app/containers/Header/network.js), and the commit and run of a
-  // GitHub Actions build for the footer
-  define: Object.fromEntries([...['MAINNET', 'SEPOLIA', 'BASE', 'ARBITRUM', 'OPTIMISM'].map((n) => `${n}_RPC_URL`),
-    'GITHUB_SHA', 'GITHUB_RUN_ID'].map((v) => [`process.env.${v}`, JSON.stringify(process.env[v] || '')])),
+  // The commit and run of a GitHub Actions build, for the footer
+  define: Object.fromEntries(['GITHUB_SHA', 'GITHUB_RUN_ID'].map((v) => [`process.env.${v}`, JSON.stringify(process.env[v] || '')])),
   server: { port: 3001, strictPort: true },
   preview: { port: 3001, strictPort: true },
   build: { outDir: '../build', emptyOutDir: true },

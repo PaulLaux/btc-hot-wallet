@@ -26,7 +26,7 @@ describe('autoLock', () => {
 });
 
 describe('wallet in localStorage', () => {
-  const vault = { salt: '00ff', iv: 'abcd', data: '1234', addresses: ['0x9858EfFD232B4033E47d90003D41EC34EcaEda94'] };
+  const vault = { salt: '00ff', iv: 'abcd', data: '1234', addresses: { main: ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu'], test: ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl'] } };
   let storage;
 
   beforeEach(() => {
@@ -66,12 +66,12 @@ describe('wallet in localStorage', () => {
     expect(storage.getItem(localStorageKey)).toBe(null);
   });
 
-  it('loads a saved wallet, also one saved by the store.js package (same key, JSON)', () => {
+  it('loads a saved wallet', () => {
     storage.setItem(localStorageKey, JSON.stringify(vault));
     const gen = loadWalletS();
     gen.next();
     gen.next();
-    expect(gen.next(false).value).toEqual(put(generateKeystoreSuccess(vault)));
+    expect(gen.next(false).value).toEqual(put(generateKeystoreSuccess(vault, 'test'))); // Testnet4 is the default
     expect(gen.next().value).toEqual(put(loadNetwork(defaultNetwork)));
     expect(gen.next().value).toEqual(put(loadWalletSuccess()));
   });

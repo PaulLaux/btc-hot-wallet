@@ -78,7 +78,13 @@ const makeSelectIsShowSendToken = () => createSelector(
   (homeState) => homeState.isShowSendToken
 );
 
-/** { address1: { index: 1, balance: weiString / false }, ... } */
+/** 'main' or 'test': the chain of the addresses shown */
+const makeSelectChain = () => createSelector(
+  selectHome,
+  (homeState) => homeState.chain
+);
+
+/** { address1: { index: 1, balance: satsString / false }, ... } */
 const makeSelectAddressMap = () => createSelector(
   selectHome,
   (homeState) => homeState.addressList
@@ -144,6 +150,7 @@ export {
   makeSelectAddressListLoading,
   makeSelectAddressListError,
   makeSelectAddressListMsg,
+  makeSelectChain,
   makeSelectAddressMap,
 
   makeSelectExchangeRates,

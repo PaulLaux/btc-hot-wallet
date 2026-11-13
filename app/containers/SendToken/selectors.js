@@ -57,9 +57,14 @@ const makeSelectLocked = () => createSelector(
   (substate) => substate.locked
 );
 
-const makeSelectFee = () => createSelector(
+const makeSelectFeeSpeed = () => createSelector(
   selectSendTokenDomain,
-  (substate) => substate.fee
+  (substate) => substate.feeSpeed
+);
+
+const makeSelectPsbt = () => createSelector(
+  selectSendTokenDomain,
+  (substate) => substate.psbt
 );
 
 const makeSelectIsSendComfirmationLocked = () => createSelector(
@@ -79,7 +84,8 @@ export {
   makeSelectComfirmationLoading,
   makeSelectConfirmationError,
   makeSelectConfirmationMsg,
-  makeSelectFee,
+  makeSelectFeeSpeed,
+  makeSelectPsbt,
 
   makeSelectIsSendComfirmationLocked,
 

@@ -1,4 +1,3 @@
-import { createWalletClient, formatEther, getAddress, http, isAddress, parseUnits, publicActions } from 'viem';
 import { all, take, call, delay, put, select, takeLatest, race, fork } from 'redux-saga/effects';
 
 import {
@@ -23,7 +22,8 @@ import {
   makeSelectFrom,
   makeSelectTo,
   makeSelectAmount,
-  makeSelectFee,
+  makeSelectFeeSpeed,
+  makeSelectPsbt,
 } from 'containers/SendToken/selectors';
 import {
   COMFIRM_SEND_TRANSACTION,
@@ -35,16 +35,13 @@ import {
   offlineModeString,
   coinGeckoPriceApi,
   coinGeckoId,
-  symbol,
-  decimals,
 } from 'utils/constants';
 import { timer } from 'utils/common';
-import { openVault, accountFor } from 'utils/wallet';
+import { openVault, keyFor } from 'utils/wallet';
+import { checkAddress, toSats, toBtc, buildTx, signTx } from 'utils/bitcoin';
+import { connect } from 'utils/esplora';
 
-import {
-  makeSelectNetworkName,
-  makeSelectPrevNetworkName,
-} from './selectors';
+import { makeSelectNetworkName } from './selectors';
 import {
   loadNetworkSuccess,
   loadNetworkError,
@@ -70,22 +67,21 @@ import {
 
 import Network from './network';
 
-// Client for the connected network (null when offline) and the chain ID it serves
-let client = null;
-let chainId = null;
+// Esplora client of the connected network (utils/esplora.js), null when offline
+let net = null;
 
 /**
- * connect to rpc and check that it serves the expected chain
+ * Connect to the network's API, check that it serves this network, and show the network's addresses
  */
 export function* loadNetwork(action) {
   try {
-    const rpcAddress = Network[action.networkName].rpc;
-    if (!rpcAddress) {
+    const network = Network[action.networkName];
+    if (!network) {
       throw new Error(`${action.networkName} network not found`);
     }
 
     if (action.networkName === offlineModeString) {
-      client = null;
+      net = null;
       yield put(stopPollingBalances());
       yield put(loadNetworkError(offlineModeString));
       return;
@@ -96,107 +92,70 @@ export function* loadNetwork(action) {
       throw new Error('keystore not initiated - Create wallet before connecting');
     }
 
-    client = null;
-    const newClient = createWalletClient({ transport: http(rpcAddress) }).extend(publicActions);
-    const newChainId = yield call([newClient, newClient.getChainId]);
-    const expectedChainId = Network[action.networkName].chainId;
-    if (expectedChainId && newChainId !== expectedChainId) {
-      throw new Error(`RPC for ${action.networkName} serves chain ID ${newChainId}, expected ${expectedChainId}`);
-    }
-    const blockNumber = yield call([newClient, newClient.getBlockNumber]);
-    [client, chainId] = [newClient, newChainId];
+    net = null;
+    const newNet = connect(network);
+    const height = yield call([newNet, newNet.height]);
+    net = newNet;
 
     yield call(timer, 600);
 
-    yield put(loadNetworkSuccess(Number(blockNumber)));
-
-    // other network: clear the balances of the old one
-    const prevNetwork = yield select(makeSelectPrevNetworkName());
-    if (prevNetwork !== action.networkName) {
-      yield put(setAddresses(keystore.addresses));
-    }
+    yield put(loadNetworkSuccess(height));
+    // the addresses of this network's chain, without the balances of the previous network
+    yield put(setAddresses(keystore.addresses[network.chain], network.chain));
 
     // actions after succesfull network load :
     yield put(checkBalances());
     yield put(getExchangeRates());
   } catch (err) {
-    yield put(loadNetworkError(err.shortMessage || err.message));
+    yield put(loadNetworkError(err.message));
   }
 }
 
-
 /**
- * parseUnits that never rounds: parseUnits would round 0.0000005 USDC up to 0.000001,
- * and 0.0000001 USDC down to 0. More decimals than the coin has is an error instead.
- */
-export function toUnits(amount, unitDecimals = decimals) {
-  const fraction = String(amount).split('.')[1] || '';
-  if (fraction.replace(/0+$/, '').length > unitDecimals) {
-    throw new Error(`Amount can have at most ${unitDecimals} decimals`);
-  }
-  return parseUnits(String(amount), unitDecimals);
-}
-
-/**
- * Check the transaction and estimate gas and fees. The user confirms the full addresses, the network
- * and the max gas fee, and SendTransaction signs with exactly this gas and these fee caps.
- * (On Base and Optimism a small L1 data fee comes on top.)
+ * Build the transaction: fetch the coins of the source address and the fee rate, select the coins.
+ * The user checks the amount, network, full addresses and fee; SendTransaction then signs exactly
+ * this transaction.
  */
 export function* confirmSendTransaction() {
   try {
-    const fromAddress = yield select(makeSelectFrom());
+    const from = yield select(makeSelectFrom());
     const amount = yield select(makeSelectAmount());
-    const toAddress = yield select(makeSelectTo());
-
-    if (!isAddress(fromAddress)) {
-      throw new Error('Source address invalid');
-    }
-
-    if (amount <= 0) {
-      throw new Error('Amount must be possitive');
-    }
-    const value = toUnits(amount);
-
-    if (!isAddress(toAddress)) {
-      throw new Error('Destenation address invalid');
-    }
-
-    if (!client) {
-      throw new Error('Not connected to a network');
-    }
-
-    const [gas, { maxFeePerGas, maxPriorityFeePerGas }] = yield all([
-      call([client, client.estimateGas], { account: fromAddress, to: toAddress, value }),
-      call([client, client.estimateFeesPerGas]),
-    ]);
+    const to = yield select(makeSelectTo());
+    const feeSpeed = yield select(makeSelectFeeSpeed());
     const networkName = yield select(makeSelectNetworkName());
 
+    const sats = toSats(amount);
+    if (!net) {
+      throw new Error('Not connected to a network');
+    }
+    const { chain } = Network[networkName];
+    checkAddress(to, chain);
+
+    const [coins, feeRate] = yield all([call([net, net.coins], from), call([net, net.feeRate], feeSpeed)]);
+    const tx = buildTx(coins, from, to, sats, feeRate, chain);
+
     const msg = [
-      `Send ${amount} ${symbol} on ${networkName}`,
-      `From: ${getAddress(fromAddress)}`,
-      `To: ${getAddress(toAddress)}`,
-      `Max gas fee: ${formatEther(gas * maxFeePerGas)} ETH`,
+      `Send ${toBtc(sats)} BTC on ${networkName}`,
+      `From: ${from}`,
+      `To: ${to}`,
+      `Fee: ${tx.fee} sats (${feeRate} sat/vB, ${tx.inputs} ${tx.inputs === 1 ? 'coin' : 'coins'} spent)`,
     ].join('\n');
-    const fee = { gas: String(gas), maxFeePerGas: String(maxFeePerGas), maxPriorityFeePerGas: String(maxPriorityFeePerGas) };
-    yield put(confirmSendTransactionSuccess(msg, fee));
+    yield put(confirmSendTransactionSuccess(msg, tx.psbt));
   } catch (err) {
-    yield put(confirmSendTransactionError(err.shortMessage || err.message));
+    yield put(confirmSendTransactionError(err.message));
   }
 }
 
 /**
- * Sign the confirmed transfer locally and broadcast it. Not client.sendTransaction:
- * viem lets the node fill in the transaction (eth_fillTransaction), and the node's chain ID, gas
- * and fees then replace ours.
+ * Sign the confirmed transaction locally and broadcast it
  */
 export function* SendTransaction() {
-  const keystore = yield select(makeSelectKeystore());
   try {
-    const fromAddress = yield select(makeSelectFrom());
-    const amount = yield select(makeSelectAmount());
-    const toAddress = yield select(makeSelectTo());
+    const keystore = yield select(makeSelectKeystore());
+    const from = yield select(makeSelectFrom());
     const password = yield select(makeSelectPassword());
-    const fee = yield select(makeSelectFee());
+    const psbt = yield select(makeSelectPsbt());
+    const networkName = yield select(makeSelectNetworkName());
 
     if (!password) {
       throw new Error('No password found - please unlock wallet before send');
@@ -204,34 +163,24 @@ export function* SendTransaction() {
     if (!keystore) {
       throw new Error('No keystore found - please create wallet');
     }
-    if (!client) {
+    if (!net) {
       throw new Error('Not connected to a network');
     }
-    const account = accountFor(keystore, yield call(openVault, keystore, password), fromAddress);
+    const key = keyFor(keystore, yield call(openVault, keystore, password), Network[networkName].chain, from);
+    const tx = signTx(psbt, key);
+    yield call([net, net.broadcast], tx.hex);
 
-    const nonce = yield call([client, client.getTransactionCount], { address: account.address, blockTag: 'pending' });
-    const serializedTransaction = yield call([account, account.signTransaction], {
-      chainId,
-      nonce,
-      to: toAddress,
-      value: toUnits(amount),
-      gas: BigInt(fee.gas),
-      maxFeePerGas: BigInt(fee.maxFeePerGas),
-      maxPriorityFeePerGas: BigInt(fee.maxPriorityFeePerGas),
-    });
-    const tx = yield call([client, client.sendRawTransaction], { serializedTransaction });
-
-    yield put(sendTransactionSuccess(tx));
+    yield put(sendTransactionSuccess(tx.id));
   } catch (err) {
-    yield put(sendTransactionError(err.shortMessage || err.message));
+    yield put(sendTransactionError(err.message));
   }
 }
 
 
 /* *************  Polling saga and polling flow for check balances ***************** */
-// Balances are kept as decimal strings (wei): Redux state must be serializable
+// Balances are kept as decimal strings (sats): Redux state must be serializable
 export function* getBalance(address) {
-  return (yield call([client, client.getBalance], { address })).toString();
+  return (yield call([net, net.addressInfo], address)).balance;
 }
 
 export function* checkAllBalances() {
@@ -274,11 +223,11 @@ function* watchPollData() {
 /* ******************************************************************************** */
 
 /**
- * Price of one coin per currency from CoinGecko: { usd: 2238.55, eur: 2007.67, btc: 0.0294 }
+ * Price of one coin per currency from CoinGecko: { usd: 94000.5, eur: 81000.25 }
  */
 export function* getRates() {
   try {
-    const prices = yield call(request, `${coinGeckoPriceApi}?ids=${coinGeckoId}&vs_currencies=usd,eur,btc`);
+    const prices = yield call(request, `${coinGeckoPriceApi}?ids=${coinGeckoId}&vs_currencies=usd,eur`);
     yield put(setExchangeRates(prices[coinGeckoId] || {}));
     yield put(getExchangeRatesSuccess());
   } catch (err) {

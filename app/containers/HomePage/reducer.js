@@ -74,7 +74,8 @@ const initialState = {
   isComfirmed: false, // if true then we have a valid keystore
 
   keystore: false,
-  addressList: false, // { address1: { index: 1, balance: weiString / false }, ... }
+  chain: false, // the addresses shown are of this chain: 'main' or 'test' (see utils/bitcoin.js)
+  addressList: false, // { address1: { index: 1, balance: satsString / false }, ... }
 
   exchangeRates: {}, // price of one coin: { usd: 2238.55, eur: 2007.67, ... }
   convertTo: 'usd', // currency shown under the balances, or 'none'
@@ -114,6 +115,7 @@ export default createReducer(initialState, (builder) => builder
       seed: false,
       isComfirmed: true,
       addressListError: false,
+      chain: a.chain,
       addressList: a.addressMap,
       generateKeystoreLoading: false,
     });
@@ -148,7 +150,7 @@ export default createReducer(initialState, (builder) => builder
   .addCase(HIDE_SEND_TOKEN, (s) => { s.isShowSendToken = false; })
 
   .addCase(SET_ADDRESSES, (s, a) => {
-    Object.assign(s, { addressListError: false, addressList: a.addressMap });
+    Object.assign(s, { addressListError: false, chain: a.chain, addressList: a.addressMap });
   })
 
   .addCase(GENERATE_ADDRESS, (s) => {

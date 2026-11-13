@@ -1,80 +1,77 @@
 import { put } from 'redux-saga/effects';
-import { parseTransaction, recoverTransactionAddress } from 'viem';
-import { toUnits, loadNetwork, confirmSendTransaction, SendTransaction } from '../saga';
-import { confirmSendTransactionError } from 'containers/SendToken/actions';
+import * as btc from '@scure/btc-signer';
+import { hex } from '@scure/base';
+import { loadNetwork, confirmSendTransaction, SendTransaction } from '../saga';
+import { confirmSendTransactionError, sendTransactionSuccess, sendTransactionError } from 'containers/SendToken/actions';
 import { COMFIRM_SEND_TRANSACTION_SUCCESS } from 'containers/SendToken/constants';
+import { setAddresses } from 'containers/HomePage/actions';
+import { buildTx } from 'utils/bitcoin';
+import { coinsOf } from 'utils/tests/coins';
 
-// index 0 of the "abandon x11 about" mnemonic
+// action creators show antd messages, which need a DOM
+vi.mock('antd', () => ({ message: { success: () => {}, error: () => {} } }));
+
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
-const from = '0x9858EfFD232B4033E47d90003D41EC34EcaEda94';
-const to = '0x000000000000000000000000000000000000dEaD';
-
-describe('toUnits', () => {
-  it('converts amounts exactly', () => {
-    expect(toUnits('1.5', 18)).toBe(1500000000000000000n);
-    expect(toUnits('0.123456789012345678', 18)).toBe(123456789012345678n);
-    expect(toUnits('6.997705', 6)).toBe(6997705n);
-    expect(toUnits('1.5000000', 6)).toBe(1500000n); // trailing zeros are fine
-    expect(toUnits('12', 0)).toBe(12n);
-    expect(toUnits(0.5, 6)).toBe(500000n);
-    expect(toUnits('2')).toBe(2000000000000000000n); // ETH by default
-  });
-
-  it('refuses amounts the coin cannot hold, instead of rounding them', () => {
-    expect(() => toUnits('0.0000005', 6)).toThrow('Amount can have at most 6 decimals'); // would round up
-    expect(() => toUnits('0.0000001', 6)).toThrow('Amount can have at most 6 decimals'); // would round to 0
-    expect(() => toUnits('0.1234567890123456789', 18)).toThrow('Amount can have at most 18 decimals');
-    expect(() => toUnits('1.5', 0)).toThrow('Amount can have at most 0 decimals');
-    expect(() => toUnits('1e-7', 18)).toThrow(); // not a decimal number
-  });
-});
+// the first two testnet addresses of the mnemonic; only the first is in the wallet
+const [from, to] = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97'];
+const keystore = { addresses: { main: ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu'], test: [from] } };
+const coins = coinsOf(from, [100000n, 546n, 30000n]);
 
 // feeds a generator one value per yield (the first next() starts it); returns the last yielded effect
 const run = (gen, ...values) => [undefined, ...values].map((v) => gen.next(v).value).pop();
 
-const fee = { gas: '60000', maxFeePerGas: '2000000000', maxPriorityFeePerGas: '1000000000' };
-const estimates = [60000n, { maxFeePerGas: 2000000000n, maxPriorityFeePerGas: 1000000000n }];
+// feeds the selected from, amount, to, fee speed and network name; returns the resulting effect
+const confirm = (amount, toAddress = to) => run(confirmSendTransaction(), from, amount, toAddress, 'normal', 'Testnet4');
 
 describe('confirmSendTransaction', () => {
-  // feeds the selected from, amount and to; returns the resulting effect
-  const confirm = (amount) => run(confirmSendTransaction(), from, amount, to.toLowerCase());
-
-  it('rejects zero and too many decimals', () => {
-    expect(confirm(null)).toEqual(put(confirmSendTransactionError('Amount must be possitive')));
-    expect(confirm('0.0000000000000000001')).toEqual(put(confirmSendTransactionError('Amount can have at most 18 decimals')));
+  it('rejects zero and amounts with more than 8 decimals', () => {
+    expect(confirm('0')).toEqual(put(confirmSendTransactionError('Amount must be positive')));
+    expect(confirm('0.000000001')).toEqual(put(confirmSendTransactionError('Amount must be a number with at most 8 decimals')));
   });
 
-  it('needs a network to estimate the fee', () => {
-    expect(confirm('0.000001')).toEqual(put(confirmSendTransactionError('Not connected to a network')));
+  it('needs a network to fetch coins and the fee rate', () => {
+    expect(confirm('0.001')).toEqual(put(confirmSendTransactionError('Not connected to a network')));
   });
 });
 
-describe('on Sepolia', () => {
-  // connect: the test answers the chain ID and block number calls, so nothing goes to the RPC
-  beforeAll(() => run(loadNetwork({ networkName: 'Sepolia Testnet' }), { addresses: [from] }, 11155111, 1n));
+describe('on Testnet4', () => {
+  // connect: the test answers the network check with a height, so nothing goes to the API
+  let shown;
+  beforeAll(() => { shown = run(loadNetwork({ networkName: 'Testnet4' }), keystore, 160000, undefined, undefined); });
 
-  it('confirms the full addresses, the network and the max gas fee', () => {
-    const gen = confirmSendTransaction();
-    const estimate = run(gen, from, '2', to.toLowerCase());
-    expect(estimate.payload[0].payload.args[0]).toEqual({ account: from, to: to.toLowerCase(), value: 2000000000000000000n });
-    gen.next(estimates); // select network name
-    const { action } = gen.next('Sepolia Testnet').value.payload;
-    expect(action.type).toBe(COMFIRM_SEND_TRANSACTION_SUCCESS);
-    expect(action.msg).toBe(`Send 2 ETH on Sepolia Testnet\nFrom: ${from}\nTo: ${to}\nMax gas fee: 0.00012 ETH`);
-    expect(action.fee).toEqual(fee);
+  it('shows the addresses of the test chain', () => {
+    expect(shown).toEqual(put(setAddresses([from], 'test')));
   });
 
-  it('signs exactly the confirmed transaction, for the chain ID it checked', async () => {
+  it('confirms the amount, network, full addresses and fee', () => {
+    const gen = confirmSendTransaction();
+    const fetches = run(gen, from, '0.0012', to, 'normal', 'Testnet4');
+    expect(fetches.payload.map((effect) => effect.payload.args)).toEqual([[from], ['normal']]);
+    const { action } = gen.next([coins, 2n]).value.payload;
+    expect(action.type).toBe(COMFIRM_SEND_TRANSACTION_SUCCESS);
+    expect(action.msg).toBe(`Send 0.0012 BTC on Testnet4\nFrom: ${from}\nTo: ${to}\nFee: 418 sats (2 sat/vB, 2 coins spent)`);
+    expect(action.psbt).toBe(buildTx(coins, from, to, 120000n, 2n, 'test').psbt);
+  });
+
+  it('refuses a destination on another network', () => {
+    const mainAddress = 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g';
+    expect(confirm('0.001', mainAddress)).toEqual(put(confirmSendTransactionError(`Not a testnet address: ${mainAddress}`)));
+  });
+
+  it('signs exactly the confirmed transaction and broadcasts it', () => {
+    const { psbt } = buildTx(coins, from, to, 120000n, 2n, 'test');
     const gen = SendTransaction();
-    // keystore, from, amount, to, password, fee, mnemonic, nonce
-    const sign = run(gen, { addresses: [from] }, from, '2', to, 'password', fee, mnemonic, 7);
-    const serializedTransaction = await sign.payload.context.signTransaction(...sign.payload.args);
+    // keystore, from, password, psbt, network name, mnemonic
+    const broadcast = run(gen, keystore, from, 'password', psbt, 'Testnet4', mnemonic);
+    const tx = btc.Transaction.fromRaw(hex.decode(broadcast.payload.args[0]));
+    const unsigned = btc.Transaction.fromPSBT(hex.decode(psbt));
+    expect(tx.unsignedTx).toEqual(unsigned.unsignedTx);
+    expect(gen.next(tx.id).value).toEqual(put(sendTransactionSuccess(tx.id)));
+  });
 
-    const tx = parseTransaction(serializedTransaction);
-    expect(tx).toMatchObject({ chainId: 11155111, nonce: 7, gas: 60000n, maxFeePerGas: 2000000000n, maxPriorityFeePerGas: 1000000000n });
-    expect(tx).toMatchObject({ to: to.toLowerCase(), value: 2000000000000000000n });
-    expect(await recoverTransactionAddress({ serializedTransaction })).toBe(from);
-
-    expect(gen.next(serializedTransaction).value.payload.args[0]).toEqual({ serializedTransaction });
+  it('signs only for addresses of the wallet', () => {
+    const { psbt } = buildTx(coinsOf(to, [100000n]), to, from, 50000n, 2n, 'test');
+    expect(run(SendTransaction(), keystore, to, 'password', psbt, 'Testnet4', mnemonic))
+      .toEqual(put(sendTransactionError(`Address ${to} is not in this wallet`)));
   });
 });

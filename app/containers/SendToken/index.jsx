@@ -12,6 +12,7 @@ import { createStructuredSelector } from 'reselect';
 import SendFrom from 'components/SendFrom';
 import SendTo from 'components/SendTo';
 import SendAmount from 'components/SendAmount';
+import SendFee from 'components/SendFee';
 import SendConfirmationView from 'components/SendConfirmationView';
 import SendProgress from 'components/SendProgress';
 
@@ -23,6 +24,7 @@ import {
   changeFrom,
   changeAmount,
   changeTo,
+  changeFeeSpeed,
   confirmSendTransaction,
   sendTransaction,
   abortTransaction,
@@ -32,6 +34,7 @@ import {
   makeSelectFrom,
   makeSelectTo,
   makeSelectAmount,
+  makeSelectFeeSpeed,
   makeSelectLocked,
   makeSelectComfirmationLoading,
   makeSelectConfirmationError,
@@ -55,6 +58,8 @@ function SendToken(props) {
     locked,
     onChangeAmount,
     onChangeTo,
+    feeSpeed,
+    onChangeFeeSpeed,
     comfirmationLoading,
     confirmationError,
     confirmationMsg,
@@ -73,6 +78,7 @@ function SendToken(props) {
   const SendFromProps = { from, addressList, onChangeFrom, locked };
   const SendAmountProps = { amount, onChangeAmount, locked };
   const SendToProps = { to, onChangeTo, locked };
+  const SendFeeProps = { feeSpeed, onChangeFeeSpeed, locked };
 
   const SendConfirmationViewProps = {
     comfirmationLoading,
@@ -107,6 +113,7 @@ function SendToken(props) {
         <SendFrom {...SendFromProps} /> <br />
         <SendAmount {...SendAmountProps} /> {symbol}<br /> <br />
         <SendTo {...SendToProps} /> <br />
+        <SendFee {...SendFeeProps} /> <br />
         <Button onClick={onConfirmSendTransaction} disabled={locked} >
           Create transaction
         </Button>
@@ -122,6 +129,7 @@ const mapStateToProps = createStructuredSelector({
   from: makeSelectFrom(),
   to: makeSelectTo(),
   amount: makeSelectAmount(),
+  feeSpeed: makeSelectFeeSpeed(),
   addressList: makeSelectAddressMap(),
 
   locked: makeSelectLocked(),
@@ -150,6 +158,9 @@ function mapDispatchToProps(dispatch) {
     },
     onChangeTo: (evt) => {
       dispatch(changeTo(evt.target.value));
+    },
+    onChangeFeeSpeed: (evt) => {
+      dispatch(changeFeeSpeed(evt.target.value));
     },
     onConfirmSendTransaction: (evt) => {
       if (evt !== undefined && evt.preventDefault) evt.preventDefault();

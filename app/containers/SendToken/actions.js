@@ -7,6 +7,7 @@ import {
   CHANGE_AMOUNT,
   CHANGE_FROM,
   CHANGE_TO,
+  CHANGE_FEE_SPEED,
 
   COMFIRM_SEND_TRANSACTION,
   COMFIRM_SEND_TRANSACTION_SUCCESS,
@@ -49,6 +50,18 @@ export function changeTo(inputAddress) {
 
 
 /**
+ * Choose the fee rate: 'slow', 'normal' or 'fast' (see utils/esplora.js)
+ *
+ * @return {object}    An action object with a type of CHANGE_FEE_SPEED and the speed
+ */
+export function changeFeeSpeed(speed) {
+  return {
+    type: CHANGE_FEE_SPEED,
+    speed,
+  };
+}
+
+/**
  * initiate confirmation object
  *
  * @return {object}    An action object with a type of COMFIRM_SEND_TRANSACTION
@@ -60,15 +73,17 @@ export function confirmSendTransaction() {
 }
 
 /**
- * transaction confirmed successfully
+ * transaction built: the message for the user to check, and the unsigned transaction to sign on send
+ * @param  {string} msg amount, network, addresses and fee
+ * @param  {string} psbt the unsigned transaction (PSBT, hex)
  *
  * @return {object}    An action object with a type of COMFIRM_SEND_TRANSACTION_SUCCESS
  */
-export function confirmSendTransactionSuccess(msg, fee) {
+export function confirmSendTransactionSuccess(msg, psbt) {
   return {
     type: COMFIRM_SEND_TRANSACTION_SUCCESS,
     msg,
-    fee,
+    psbt,
   };
 }
 

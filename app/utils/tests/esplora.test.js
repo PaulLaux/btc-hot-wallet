@@ -1,6 +1,6 @@
-import * as btc from '@scure/btc-signer';
 import { hex } from '@scure/base';
 import { failoverFetch, connect } from '../esplora';
+import { coinsOf } from './coins';
 
 const apis = ['https://a.example/api', 'https://b.example/api'];
 const testnet4 = { chain: 'test', apis, genesis: '00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043' };
@@ -63,21 +63,13 @@ describe('connect', () => {
   });
 
   it('returns coins with their funding transaction, and refuses one that does not match its id', async () => {
-    const script = btc.OutScript.encode(btc.Address(btc.TEST_NETWORK).decode(address));
-    const funding = (lockTime) => btc.RawTx.encode({
-      version: 2,
-      segwitFlag: false,
-      inputs: [{ txid: new Uint8Array(32), index: 0, finalScriptSig: new Uint8Array(), sequence: 0xffffffff }],
-      outputs: [{ amount: 100000n, script }],
-      witnesses: [],
-      lockTime,
-    });
-    const raw = funding(0);
-    const txid = btc.Transaction.fromRaw(raw, { allowUnknownInputs: true }).id;
+    const [coin] = coinsOf(address, [100000n]);
+    const { txid, nonWitnessUtxo: raw } = coin;
     const utxo = [200, [{ txid, vout: 0, value: 100000, status: { confirmed: true } }]];
     stubFetch({ [api(`/address/${address}/utxo`)]: utxo, [api(`/tx/${txid}/hex`)]: [200, hex.encode(raw)] });
-    expect(await connect(testnet4).coins(address)).toEqual([{ txid, index: 0, nonWitnessUtxo: raw }]);
-    stubFetch({ [api(`/address/${address}/utxo`)]: utxo, [api(`/tx/${txid}/hex`)]: [200, hex.encode(funding(1))] });
+    expect(await connect(testnet4).coins(address)).toEqual([coin]);
+    const other = coinsOf(address, [100000n], 1)[0].nonWitnessUtxo;
+    stubFetch({ [api(`/address/${address}/utxo`)]: utxo, [api(`/tx/${txid}/hex`)]: [200, hex.encode(other)] });
     await expect(connect(testnet4).coins(address)).rejects.toThrow();
   });
 

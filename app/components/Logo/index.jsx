@@ -25,7 +25,7 @@ function Logo() {
   return (
     <Div>
       <Img alt="logo" src={walletLogo} />
-      ETH Hot Wallet
+      BTC Hot Wallet
     </Div>
   );
 }

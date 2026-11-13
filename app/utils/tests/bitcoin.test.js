@@ -1,26 +1,12 @@
 import * as btc from '@scure/btc-signer';
 import { hex } from '@scure/base';
 import { deriveAddresses, privateKey, checkAddress, toSats, toBtc, buildTx, signTx } from '../bitcoin';
+import { coinsOf } from './coins';
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
 // BIP-84 test vectors m/84'/0'/0'/0/{0,1}, and the testnet addresses of m/84'/1'/0'/0/{0,1}
 const main = ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu', 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g'];
 const test = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97'];
-
-// Coins as EsploraProvider.unspent returns them: outputs of one funding transaction, paying `address`
-function coinsOf(address, amounts) {
-  const script = btc.OutScript.encode(btc.Address(btc.TEST_NETWORK).decode(address));
-  const raw = btc.RawTx.encode({
-    version: 2,
-    segwitFlag: false,
-    inputs: [{ txid: new Uint8Array(32), index: 0, finalScriptSig: new Uint8Array(), sequence: 0xffffffff }],
-    outputs: amounts.map((amount) => ({ amount, script })),
-    witnesses: [],
-    lockTime: 0,
-  });
-  const txid = btc.Transaction.fromRaw(raw, { allowUnknownInputs: true }).id;
-  return amounts.map((amount, index) => ({ txid, index, nonWitnessUtxo: raw }));
-}
 
 // { address: amount } of a transaction's outputs
 const outputsOf = (tx) => Object.fromEntries([...Array(tx.outputsLength).keys()].map((i) => {

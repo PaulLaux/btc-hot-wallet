@@ -23,9 +23,11 @@ import {
   makeSelectUserSeed,
   makeSelectUserPassword,
   makeSelectKeystore,
+  makeSelectChain,
 } from 'containers/HomePage/selectors';
 
 import { loadNetwork } from 'containers/Header/actions';
+import Network from 'containers/Header/network';
 
 import { changeFrom } from 'containers/SendToken/actions';
 
@@ -119,7 +121,7 @@ export function* genKeystore() {
 
     const ks = yield call(createVault, seedPhrase, password);
 
-    yield put(generateKeystoreSuccess(ks));
+    yield put(generateKeystoreSuccess(ks, Network[defaultNetwork].chain));
     yield put(loadNetwork(defaultNetwork));
     yield put(saveWallet());
   } catch (err) {
@@ -145,9 +147,10 @@ export function* generateAddress() {
       throw new Error('Wallet Locked');
     }
 
-    const newKs = addAddress(ks, yield call(openVault, ks, password));
-    const newAddress = newKs.addresses.slice(-1)[0];
-    const index = newKs.addresses.length; // serial index for sorting by generation order;
+    const chain = yield select(makeSelectChain());
+    const newKs = addAddress(ks, yield call(openVault, ks, password), chain);
+    const newAddress = newKs.addresses[chain].slice(-1)[0];
+    const index = newKs.addresses[chain].length; // serial index for sorting by generation order;
     yield put(generateAddressSuccess(newKs, newAddress, index));
     yield put(saveWallet());
 
@@ -252,7 +255,7 @@ export function* loadWalletS() {
       throw new Error('No keystore found in localStorage');
     }
 
-    yield put(generateKeystoreSuccess(ks));
+    yield put(generateKeystoreSuccess(ks, Network[defaultNetwork].chain));
     yield put(loadNetwork(defaultNetwork));
     yield put(loadWalletSuccess());
   } catch (err) {

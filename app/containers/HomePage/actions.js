@@ -232,16 +232,18 @@ const createAddressMap = (addresses) =>
   Object.fromEntries(addresses.map((address, i) => [address, { index: i + 1, balance: false }]));
 
 /**
- * The keystore is ready: show its addresses
+ * The keystore is ready: show its addresses of the chain
  * @param {keystore} keystore The new keystore
+ * @param {string} chain 'main' or 'test' (see utils/bitcoin.js)
  *
  * @return {object}      An action object with a type of GENERATE_KEYSTORE_SUCCESS
  */
-export function generateKeystoreSuccess(keystore) {
+export function generateKeystoreSuccess(keystore, chain) {
   return {
     type: GENERATE_KEYSTORE_SUCCESS,
     keystore,
-    addressMap: createAddressMap(keystore.addresses),
+    chain,
+    addressMap: createAddressMap(keystore.addresses[chain]),
   };
 }
 
@@ -265,7 +267,7 @@ export function generateKeystoreError(error) {
  * Changes the balance of an address; ignored if the address is not in the table
  *
  * @param  {string} address as string
- * @param  {string} balance in base units (wei), as a decimal string
+ * @param  {string} balance in sats, as a decimal string
  *
  * @return {object} An action object with a type of CHANGE_BALANCE with address and balance
  */
@@ -280,7 +282,7 @@ export function changeBalance(address, balance) {
 /* ******************* Show / hide SEND_TOKEN ***************************** */
 /**
  * Show the SendToken container
- * @param  {string} address '0xa4b..'
+ * @param  {string} address 'bc1q..'
  *
  * @return {object} An action object with a type of SHOW_SEND_TOKEN
  */
@@ -303,14 +305,16 @@ export function hideSendToken() {
 }
 
 /**
- * Show these addresses, without balances (after a network change)
- * @param  {string[]} addresses ['0xffd..']
+ * Show the addresses of a chain, without balances (after connecting to a network)
+ * @param  {string[]} addresses ['bc1q..']
+ * @param  {string} chain 'main' or 'test'
  *
- * @return {object}    An action object with a type of SET_ADDRESSES and the address map
+ * @return {object}    An action object with a type of SET_ADDRESSES, the chain and the address map
  */
-export function setAddresses(addresses) {
+export function setAddresses(addresses, chain) {
   return {
     type: SET_ADDRESSES,
+    chain,
     addressMap: createAddressMap(addresses),
   };
 }

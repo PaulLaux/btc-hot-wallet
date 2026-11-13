@@ -15,7 +15,7 @@ function SendAmount({ amount, onChangeAmount, locked }) {
       <InputNumber
         value={amount}
         min={0}
-        step={0.1}
+        step={0.001}
         stringMode
         onChange={(value) => onChangeAmount((value))}
         disabled={locked}

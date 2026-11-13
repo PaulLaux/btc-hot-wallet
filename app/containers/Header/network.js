@@ -1,21 +1,32 @@
-import { arbitrum, base, mainnet, optimism, sepolia } from 'viem/chains';
-
-// RPC endpoints default to keyless public nodes. Override them at build time, e.g.
-//   MAINNET_RPC_URL=https://mainnet.infura.io/v3/<project-id> npm start
-// (also SEPOLIA_, BASE_, ARBITRUM_ and OPTIMISM_RPC_URL).
-// Chain IDs and explorers come from viem. chainId (when set) is checked against the node's
-// eth_chainId and used for EIP-155 signing.
-const fromViem = (group, chain, rpc) => ({ group, rpc, chainId: chain.id, tx_explorer: `${chain.blockExplorers.default.url}/tx/` });
+// Each network lists public Esplora APIs, tried in order (see utils/esplora.js): mempool.space, then
+// blockstream.info. genesis is the hash of block 0, checked on connect; chain picks the addresses
+// (utils/bitcoin.js): Testnet4 and Signet share the test chain's addresses.
+const esplora = (path) => [`https://mempool.space${path}/api`, `https://blockstream.info${path}/api`];
 
 // The network menu lists them in this order, under their group
 const Network = {
-  'Ethereum Mainnet': fromViem('Ethereum', mainnet, process.env.MAINNET_RPC_URL || 'https://ethereum-rpc.publicnode.com'),
-  'Sepolia Testnet': fromViem('Ethereum', sepolia, process.env.SEPOLIA_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com'),
-  Base: fromViem('Layer 2', base, process.env.BASE_RPC_URL || 'https://base-rpc.publicnode.com'),
-  'Arbitrum One': fromViem('Layer 2', arbitrum, process.env.ARBITRUM_RPC_URL || 'https://arbitrum-one-rpc.publicnode.com'),
-  Optimism: fromViem('Layer 2', optimism, process.env.OPTIMISM_RPC_URL || 'https://optimism-rpc.publicnode.com'),
-  'Local RPC': { group: 'Other', rpc: 'http://127.0.0.1:8545', tx_explorer: null },
-  Offline: { group: 'Other', rpc: 'offline', tx_explorer: null },
+  Mainnet: {
+    group: 'Bitcoin',
+    chain: 'main',
+    apis: esplora(''),
+    genesis: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f',
+    tx_explorer: 'https://mempool.space/tx/',
+  },
+  Testnet4: {
+    group: 'Test networks',
+    chain: 'test',
+    apis: esplora('/testnet4'),
+    genesis: '00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043',
+    tx_explorer: 'https://mempool.space/testnet4/tx/',
+  },
+  Signet: {
+    group: 'Test networks',
+    chain: 'test',
+    apis: esplora('/signet'),
+    genesis: '00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6',
+    tx_explorer: 'https://mempool.space/signet/tx/',
+  },
+  Offline: { group: 'Other', apis: [], tx_explorer: null },
 };
 
 export default Network;

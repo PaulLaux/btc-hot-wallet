@@ -1,17 +1,17 @@
 /**
  * HD wallet: a BIP-39 mnemonic encrypted with the user's password (PBKDF2 + AES-GCM).
- * Addresses use the standard path m/44'/60'/0'/0/<index> and are stored unencrypted,
+ * Addresses (BIP-84, see utils/bitcoin.js) are stored unencrypted per chain, { main: [...], test: [...] },
  * so a locked wallet can still show balances.
  */
-import { bytesToHex, hexToBytes } from 'viem';
-import { english, generateMnemonic, mnemonicToAccount } from 'viem/accounts';
-import { validateMnemonic } from '@scure/bip39';
+import { hex } from '@scure/base';
+import { generateMnemonic, validateMnemonic } from '@scure/bip39';
+import { wordlist as english } from '@scure/bip39/wordlists/english.js';
+import { deriveAddresses, privateKey } from 'utils/bitcoin';
 
 const PBKDF2_ITERATIONS = 600000;
 
-export const newMnemonic = () => generateMnemonic(english);
+export const newMnemonic = () => generateMnemonic(english); // 12 words; restore also takes 24
 export const isMnemonicValid = (mnemonic) => validateMnemonic(mnemonic, english);
-const accountAt = (mnemonic, index) => mnemonicToAccount(mnemonic, { addressIndex: index });
 
 async function aesKey(password, salt) {
   const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
@@ -21,32 +21,44 @@ async function aesKey(password, salt) {
   );
 }
 
-/** Encrypt the mnemonic and derive the first address */
+/** Encrypt the mnemonic and derive the first address of each chain */
 export async function createVault(mnemonic, password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesKey(password, salt), new TextEncoder().encode(mnemonic));
-  return { salt: bytesToHex(salt), iv: bytesToHex(iv), data: bytesToHex(new Uint8Array(data)), addresses: [accountAt(mnemonic, 0).address] };
+  return {
+    salt: hex.encode(salt),
+    iv: hex.encode(iv),
+    data: hex.encode(new Uint8Array(data)),
+    addresses: { main: deriveAddresses(mnemonic, 'main', 0, 1), test: deriveAddresses(mnemonic, 'test', 0, 1) },
+  };
 }
 
 /** Decrypt the mnemonic; throws if the password is wrong */
 export async function openVault(vault, password) {
   try {
-    const key = await aesKey(password, hexToBytes(vault.salt));
-    const data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: hexToBytes(vault.iv) }, key, hexToBytes(vault.data));
+    const key = await aesKey(password, hex.decode(vault.salt));
+    const data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: hex.decode(vault.iv) }, key, hex.decode(vault.data));
     return new TextDecoder().decode(data);
   } catch {
     throw new Error('Invalid password');
   }
 }
 
-/** Return the vault with the next HD address added */
-export const addAddress = (vault, mnemonic) =>
-  ({ ...vault, addresses: [...vault.addresses, accountAt(mnemonic, vault.addresses.length).address] });
+/** Return the vault with the next address of the chain added */
+export function addAddress(vault, mnemonic, chain) {
+  const addresses = vault.addresses[chain];
+  return { ...vault, addresses: { ...vault.addresses, [chain]: [...addresses, ...deriveAddresses(mnemonic, chain, addresses.length, 1)] } };
+}
 
-/** Signing account for one of the vault's addresses */
-export function accountFor(vault, mnemonic, address) {
-  const index = vault.addresses.indexOf(address);
-  if (index < 0) throw new Error(`Address ${address} is not in this wallet`);
-  return accountAt(mnemonic, index);
+/**
+ * Signing key of one of the vault's addresses. The addresses are stored unencrypted, so the address is
+ * derived again: a key is only returned for an address the mnemonic really has at that index.
+ */
+export function keyFor(vault, mnemonic, chain, address) {
+  const index = vault.addresses[chain].indexOf(address);
+  if (index < 0 || deriveAddresses(mnemonic, chain, index, 1)[0] !== address) {
+    throw new Error(`Address ${address} is not in this wallet`);
+  }
+  return privateKey(mnemonic, chain, index);
 }
