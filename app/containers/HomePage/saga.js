@@ -17,19 +17,15 @@ import {
   LOAD_WALLET,
 } from 'containers/HomePage/constants';
 
-import { CONFIRM_UPDATE_TOKEN_INFO } from 'containers/TokenChooser/constants';
-
 import {
   makeSelectPassword,
   makeSelectSeed,
   makeSelectUserSeed,
   makeSelectUserPassword,
   makeSelectKeystore,
-  makeSelectTokenInfoList,
 } from 'containers/HomePage/selectors';
 
-import { loadNetwork, getExchangeRates, checkBalances } from 'containers/Header/actions';
-import { makeSelectNetworkReady } from 'containers/Header/selectors';
+import { loadNetwork } from 'containers/Header/actions';
 
 import { changeFrom } from 'containers/SendToken/actions';
 
@@ -41,7 +37,7 @@ import { generatedPasswordLength, offlineModeString, defaultNetwork, localStorag
 
 import { timer } from 'utils/common';
 
-import { getEthBalance } from 'containers/Header/saga';
+import { getBalance } from 'containers/Header/saga';
 
 import {
   generateWalletSucces,
@@ -63,7 +59,6 @@ import {
   saveWalletError,
   loadWalletSuccess,
   loadWalletError,
-  updateTokenInfo,
 } from './actions';
 
 /**
@@ -123,9 +118,8 @@ export function* genKeystore() {
     yield call(timer, 300);
 
     const ks = yield call(createVault, seedPhrase, password);
-    const tokenList = yield select(makeSelectTokenInfoList());
 
-    yield put(generateKeystoreSuccess(ks, tokenList));
+    yield put(generateKeystoreSuccess(ks));
     yield put(loadNetwork(defaultNetwork));
     yield put(saveWallet());
   } catch (err) {
@@ -154,14 +148,13 @@ export function* generateAddress() {
     const newKs = addAddress(ks, yield call(openVault, ks, password));
     const newAddress = newKs.addresses.slice(-1)[0];
     const index = newKs.addresses.length; // serial index for sorting by generation order;
-    const tokenList = yield select(makeSelectTokenInfoList());
-    yield put(generateAddressSuccess(newKs, newAddress, index, tokenList));
+    yield put(generateAddressSuccess(newKs, newAddress, index));
     yield put(saveWallet());
 
     // balance checking for new address (will be aborted in offline mode)
     try {
-      const balance = yield call(getEthBalance, newAddress);
-      yield put(changeBalance(newAddress, 'eth', balance));
+      const balance = yield call(getBalance, newAddress);
+      yield put(changeBalance(newAddress, balance));
     } catch { /* offline */ }
   } catch (err) {
     yield call(timer, 1000); // eye candy
@@ -208,12 +201,11 @@ export function* autoLock() {
 }
 
 /**
- * change source address and token when opening send modal
+ * change source address when opening send modal
  */
 export function* changeSourceAddress(action) {
-  // wait for container to load and then change from address
   if (action.address) {
-    yield put(changeFrom(action.address, action.sendTokenSymbol));
+    yield put(changeFrom(action.address));
   }
 }
 
@@ -260,8 +252,7 @@ export function* loadWalletS() {
       throw new Error('No keystore found in localStorage');
     }
 
-    const tokenList = yield select(makeSelectTokenInfoList());
-    yield put(generateKeystoreSuccess(ks, tokenList));
+    yield put(generateKeystoreSuccess(ks));
     yield put(loadNetwork(defaultNetwork));
     yield put(loadWalletSuccess());
   } catch (err) {
@@ -277,21 +268,6 @@ export function* deleteWallet() {
   try {
     localStorage.clear();
   } catch { /* storage blocked by the browser: nothing was saved */ }
-}
-
-/**
- * Saga triggered by TokenChooser container to pass tokenInfo for selected tokens
- * @param {object} action dispatched by tokenChooser
- * @param {object} action.tokenInfo
- */
-export function* chosenTokenInfo(action) {
-  const addressList = (yield select(makeSelectKeystore())).addresses;
-  yield put(updateTokenInfo(addressList, action.tokenInfo));
-  // the new list starts without balances or rates: fetch them (not in Offline mode)
-  if (yield select(makeSelectNetworkReady())) {
-    yield put(checkBalances());
-    yield put(getExchangeRates());
-  }
 }
 
 /**
@@ -314,6 +290,4 @@ export default function* walletData() {
 
   yield takeLatest(SAVE_WALLET, saveWalletS);
   yield takeLatest(LOAD_WALLET, loadWalletS);
-
-  yield takeLatest(CONFIRM_UPDATE_TOKEN_INFO, chosenTokenInfo);
 }

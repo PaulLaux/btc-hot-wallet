@@ -1,3 +1,8 @@
+/* The coin: its ticker, base units per coin (10 ** decimals) and CoinGecko ID for prices */
+export const symbol = 'ETH';
+export const decimals = 18;
+export const coinGeckoId = 'ethereum';
+
 /* Auto generated password lenght */
 export const generatedPasswordLength = 12;
 
@@ -19,5 +24,5 @@ export const localStorageKey = 'wallet';
 export const github = 'https://github.com/PaulLaux/eth-hot-wallet';
 
 // APIs:
-// Keyless CoinGecko endpoint, queried with ?symbols=eth,...&vs_currencies=usd,eur,btc
+// Keyless CoinGecko endpoint, queried with ?ids=<coinGeckoId>&vs_currencies=...
 export const coinGeckoPriceApi = 'https://api.coingecko.com/api/v3/simple/price';

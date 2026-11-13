@@ -8,6 +8,7 @@ import React from 'react';
 import { Alert, Button, Spin } from 'antd';
 import { CloseOutlined, VerticalAlignTopOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import { symbol } from 'utils/constants';
 
 const Div = styled.div`
   margin-top: 22px;
@@ -29,7 +30,6 @@ function SendConfirmationView(props) {
     onAbortTransaction,
     isSendComfirmationLocked,
     sendError,
-    sendTokenSymbol,
   } = props;
   if (comfirmationLoading) {
     return (
@@ -69,7 +69,7 @@ function SendConfirmationView(props) {
         />
         <br />
         <Button icon={<VerticalAlignTopOutlined />} onClick={onSendTransaction} disabled={isSendComfirmationLocked} >
-          {sendError ? 'Try again' : `Send ${sendTokenSymbol.toUpperCase()}`}
+          {sendError ? 'Try again' : `Send ${symbol}`}
         </Button>
         {' '}
         <Button icon={<CloseOutlined />} onClick={onAbortTransaction} disabled={isSendComfirmationLocked} >

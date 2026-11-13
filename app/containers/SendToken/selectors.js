@@ -22,11 +22,6 @@ const makeSelectAmount = () => createSelector(
   (substate) => substate.amount
 );
 
-const makeSelectSendTokenSymbol = () => createSelector(
-  selectSendTokenDomain,
-  (substate) => substate.sendTokenSymbol
-);
-
 const makeSelectComfirmationLoading = () => createSelector(
   selectSendTokenDomain,
   (substate) => substate.comfirmationLoading
@@ -80,7 +75,6 @@ export {
   makeSelectTo,
   makeSelectAmount,
   makeSelectLocked,
-  makeSelectSendTokenSymbol,
 
   makeSelectComfirmationLoading,
   makeSelectConfirmationError,

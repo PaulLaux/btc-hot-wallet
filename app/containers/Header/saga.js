@@ -1,18 +1,15 @@
-import { createWalletClient, encodeFunctionData, erc20Abi, formatEther, getAddress, http, isAddress, parseUnits, publicActions } from 'viem';
+import { createWalletClient, formatEther, getAddress, http, isAddress, parseUnits, publicActions } from 'viem';
 import { all, take, call, delay, put, select, takeLatest, race, fork } from 'redux-saga/effects';
-import { dummyRates } from './tests/dummyRates';
 
 import {
   makeSelectKeystore,
   makeSelectPassword,
   makeSelectAddressMap,
-  makeSelectTokenInfoList,
-  makeSelectTokenInfo,
 } from 'containers/HomePage/selectors';
 import {
   changeBalance,
   setExchangeRates,
-  updateTokenInfo,
+  setAddresses,
 } from 'containers/HomePage/actions';
 import request from 'utils/request';
 
@@ -26,7 +23,6 @@ import {
   makeSelectFrom,
   makeSelectTo,
   makeSelectAmount,
-  makeSelectSendTokenSymbol,
   makeSelectFee,
 } from 'containers/SendToken/selectors';
 import {
@@ -38,10 +34,12 @@ import {
   timeBetweenCheckbalances,
   offlineModeString,
   coinGeckoPriceApi,
+  coinGeckoId,
+  symbol,
+  decimals,
 } from 'utils/constants';
 import { timer } from 'utils/common';
 import { openVault, accountFor } from 'utils/wallet';
-import { message } from 'antd';
 
 import {
   makeSelectNetworkName,
@@ -76,23 +74,12 @@ import Network from './network';
 let client = null;
 let chainId = null;
 
-/* For development only, if online = false then most api calls will be replaced by constant values
-* affected functions:
-* loadNetwork() will connect to 'Local RPC' but default network name will be showen in gui
-* getRates() will not call rate api
-*/
-const online = true;
-if (!online) message.warning('Debug mode: online = false in Header/saga.js');
-
 /**
  * connect to rpc and check that it serves the expected chain
  */
 export function* loadNetwork(action) {
-  if (!online) {
-    message.warning('debug mode: online = false in Header/saga.js');
-  }
   try {
-    const rpcAddress = online ? Network[action.networkName].rpc : Network['Local RPC'].rpc;
+    const rpcAddress = Network[action.networkName].rpc;
     if (!rpcAddress) {
       throw new Error(`${action.networkName} network not found`);
     }
@@ -112,7 +99,7 @@ export function* loadNetwork(action) {
     client = null;
     const newClient = createWalletClient({ transport: http(rpcAddress) }).extend(publicActions);
     const newChainId = yield call([newClient, newClient.getChainId]);
-    const expectedChainId = online ? Network[action.networkName].chainId : undefined;
+    const expectedChainId = Network[action.networkName].chainId;
     if (expectedChainId && newChainId !== expectedChainId) {
       throw new Error(`RPC for ${action.networkName} serves chain ID ${newChainId}, expected ${expectedChainId}`);
     }
@@ -123,10 +110,10 @@ export function* loadNetwork(action) {
 
     yield put(loadNetworkSuccess(Number(blockNumber)));
 
-    // clear token list if changed network, before balances and rates read it
+    // other network: clear the balances of the old one
     const prevNetwork = yield select(makeSelectPrevNetworkName());
     if (prevNetwork !== action.networkName) {
-      yield put(updateTokenInfo(keystore.addresses));
+      yield put(setAddresses(keystore.addresses));
     }
 
     // actions after succesfull network load :
@@ -140,21 +127,14 @@ export function* loadNetwork(action) {
 
 /**
  * parseUnits that never rounds: parseUnits would round 0.0000005 USDC up to 0.000001,
- * and 0.0000001 USDC down to 0. More decimals than the token has is an error instead.
+ * and 0.0000001 USDC down to 0. More decimals than the coin has is an error instead.
  */
-export function toUnits(amount, decimals) {
+export function toUnits(amount, unitDecimals = decimals) {
   const fraction = String(amount).split('.')[1] || '';
-  if (fraction.replace(/0+$/, '').length > decimals) {
-    throw new Error(`Amount can have at most ${decimals} decimals`);
+  if (fraction.replace(/0+$/, '').length > unitDecimals) {
+    throw new Error(`Amount can have at most ${unitDecimals} decimals`);
   }
-  return parseUnits(String(amount), decimals);
-}
-
-/** The transaction that sends amount: a plain ETH transfer, or an ERC-20 transfer call */
-export function txRequest(symbol, tokenInfo, to, amount) {
-  const value = toUnits(amount, tokenInfo.decimals);
-  if (symbol === 'eth') return { to, value };
-  return { to: tokenInfo.contractAddress, data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [to, value] }) };
+  return parseUnits(String(amount), unitDecimals);
 }
 
 /**
@@ -167,8 +147,6 @@ export function* confirmSendTransaction() {
     const fromAddress = yield select(makeSelectFrom());
     const amount = yield select(makeSelectAmount());
     const toAddress = yield select(makeSelectTo());
-    const tokenSymbol = yield select(makeSelectSendTokenSymbol());
-    const tokenInfo = yield select(makeSelectTokenInfo(tokenSymbol));
 
     if (!isAddress(fromAddress)) {
       throw new Error('Source address invalid');
@@ -177,11 +155,7 @@ export function* confirmSendTransaction() {
     if (amount <= 0) {
       throw new Error('Amount must be possitive');
     }
-
-    if (!tokenInfo) {
-      throw new Error(`Token '${tokenSymbol}' not found`);
-    }
-    toUnits(amount, tokenInfo.decimals);
+    const value = toUnits(amount);
 
     if (!isAddress(toAddress)) {
       throw new Error('Destenation address invalid');
@@ -191,15 +165,14 @@ export function* confirmSendTransaction() {
       throw new Error('Not connected to a network');
     }
 
-    const request = txRequest(tokenSymbol, tokenInfo, toAddress, amount);
     const [gas, { maxFeePerGas, maxPriorityFeePerGas }] = yield all([
-      call([client, client.estimateGas], { account: fromAddress, ...request }),
+      call([client, client.estimateGas], { account: fromAddress, to: toAddress, value }),
       call([client, client.estimateFeesPerGas]),
     ]);
     const networkName = yield select(makeSelectNetworkName());
 
     const msg = [
-      `Send ${amount} ${tokenSymbol.toUpperCase()} on ${networkName}`,
+      `Send ${amount} ${symbol} on ${networkName}`,
       `From: ${getAddress(fromAddress)}`,
       `To: ${getAddress(toAddress)}`,
       `Max gas fee: ${formatEther(gas * maxFeePerGas)} ETH`,
@@ -212,7 +185,7 @@ export function* confirmSendTransaction() {
 }
 
 /**
- * Sign the confirmed ETH or ERC-20 transfer locally and broadcast it. Not client.sendTransaction:
+ * Sign the confirmed transfer locally and broadcast it. Not client.sendTransaction:
  * viem lets the node fill in the transaction (eth_fillTransaction), and the node's chain ID, gas
  * and fees then replace ours.
  */
@@ -225,9 +198,6 @@ export function* SendTransaction() {
     const password = yield select(makeSelectPassword());
     const fee = yield select(makeSelectFee());
 
-    const tokenToSend = yield select(makeSelectSendTokenSymbol());
-    const tokenInfo = yield select(makeSelectTokenInfo(tokenToSend));
-
     if (!password) {
       throw new Error('No password found - please unlock wallet before send');
     }
@@ -237,16 +207,14 @@ export function* SendTransaction() {
     if (!client) {
       throw new Error('Not connected to a network');
     }
-    if (!tokenInfo) {
-      throw new Error(`Token '${tokenToSend}' not found`);
-    }
     const account = accountFor(keystore, yield call(openVault, keystore, password), fromAddress);
 
     const nonce = yield call([client, client.getTransactionCount], { address: account.address, blockTag: 'pending' });
     const serializedTransaction = yield call([account, account.signTransaction], {
       chainId,
       nonce,
-      ...txRequest(tokenToSend, tokenInfo, toAddress, amount),
+      to: toAddress,
+      value: toUnits(amount),
       gas: BigInt(fee.gas),
       maxFeePerGas: BigInt(fee.maxFeePerGas),
       maxPriorityFeePerGas: BigInt(fee.maxPriorityFeePerGas),
@@ -261,66 +229,17 @@ export function* SendTransaction() {
 
 
 /* *************  Polling saga and polling flow for check balances ***************** */
-// Balances are kept as decimal strings (wei / token base units): Redux state must be serializable
-export function* getEthBalance(address) {
+// Balances are kept as decimal strings (wei): Redux state must be serializable
+export function* getBalance(address) {
   return (yield call([client, client.getBalance], { address })).toString();
-}
-
-function* getTokenBalance(address, tokenContractAddress) {
-  const balance = yield call([client, client.readContract], {
-    address: tokenContractAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address],
-  });
-  return balance.toString();
-}
-
-
-function* checkTokenBalance(address, symbol) {
-  if (!address || !symbol) {
-    return null;
-  }
-  const tokenInfo = yield select(makeSelectTokenInfo(symbol));
-  const contractAddress = tokenInfo.contractAddress;
-
-  const balance = yield call(getTokenBalance, address, contractAddress);
-
-  yield put(changeBalance(address, symbol, balance));
-
-  return true;
-}
-
-function* checkTokensBalances(address) {
-  const opt = {
-    returnList: true,
-    removeIndex: true,
-    removeEth: true,
-  };
-  const tokenList = yield select(makeSelectAddressMap(address, opt));
-
-  for (let i = 0; i < tokenList.length; i += 1) {
-    const symbol = tokenList[i];
-    // console.log('address: ' + address + ' token: ' + tokenList[i]);
-    yield checkTokenBalance(address, symbol);
-  }
-  // console.log(tokenMap);
 }
 
 export function* checkAllBalances() {
   try {
-    let j = 0;
-    const addressList = yield select(makeSelectAddressMap(false, { returnList: true }));
-
-    do { // Iterate over all addresses and check for balance
-      const address = addressList[j];
-      // handle eth
-      const balance = yield call(getEthBalance, address);
-      yield put(changeBalance(address, 'eth', balance));
-
-      // handle tokens
-      yield checkTokensBalances(address);
-
-      j += 1;
-    } while (j < addressList.length);
-
+    const addresses = Object.keys(yield select(makeSelectAddressMap()));
+    for (const address of addresses) {
+      yield put(changeBalance(address, yield call(getBalance, address)));
+    }
     yield put(checkBalancesSuccess());
   } catch (err) {
     yield put(CheckBalancesError(err.message));
@@ -355,36 +274,12 @@ function* watchPollData() {
 /* ******************************************************************************** */
 
 /**
- * Convert a CoinGecko /simple/price response ({ eth: { usd, eur, btc }, ... }) into the
- * [{ symbol, price_usd, price_eur, price_btc }] list that utils/unitConverter expects.
- * Coins missing any of the three prices are skipped.
- */
-export function coinGeckoToRates(prices) {
-  const currencies = ['usd', 'eur', 'btc'];
-  return Object.keys(prices)
-    .filter((symbol) => currencies.every((c) => typeof prices[symbol][c] === 'number'))
-    .map((symbol) => ({
-      symbol: symbol.toUpperCase(),
-      price_usd: String(prices[symbol].usd),
-      price_eur: String(prices[symbol].eur),
-      price_btc: String(prices[symbol].btc),
-    }));
-}
-
-/**
- * Get exchange rates for eth and all known tokens from CoinGecko
+ * Price of one coin per currency from CoinGecko: { usd: 2238.55, eur: 2007.67, btc: 0.0294 }
  */
 export function* getRates() {
   try {
-    const tokenList = yield select(makeSelectTokenInfoList());
-    const symbols = ['eth', ...tokenList.filter((symbol) => symbol !== 'eth')];
-    const requestURL = `${coinGeckoPriceApi}?symbols=${symbols.join(',')}&vs_currencies=usd,eur,btc`;
-
-    const apiRates = online ?
-      coinGeckoToRates(yield call(request, requestURL)) :
-      dummyRates;
-
-    yield put(setExchangeRates(apiRates, coinGeckoPriceApi, tokenList));
+    const prices = yield call(request, `${coinGeckoPriceApi}?ids=${coinGeckoId}&vs_currencies=usd,eur,btc`);
+    yield put(setExchangeRates(prices[coinGeckoId] || {}));
     yield put(getExchangeRatesSuccess());
   } catch (err) {
     yield put(getExchangeRatesError(err.message));

@@ -26,7 +26,6 @@ const initialState = {
   to: '',
   amount: 0,
   locked: false,
-  sendTokenSymbol: 'eth',
 
   comfirmationLoading: false,
   confirmationError: false,
@@ -40,11 +39,7 @@ const initialState = {
 };
 
 export default createReducer(initialState, (builder) => builder
-  .addCase(CHANGE_FROM, (s, a) => {
-    // update values only if provided:
-    s.from = a.address || s.from;
-    s.sendTokenSymbol = a.sendTokenSymbol || s.sendTokenSymbol;
-  })
+  .addCase(CHANGE_FROM, (s, a) => { s.from = a.address; })
   .addCase(CHANGE_AMOUNT, (s, a) => { s.amount = a.amount; })
   .addCase(CHANGE_TO, (s, a) => { s.to = a.address; })
 

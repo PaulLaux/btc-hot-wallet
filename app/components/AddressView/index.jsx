@@ -23,7 +23,7 @@ function AddressView(props) {
   const {
     generateKeystoreLoading, generateKeystoreError,
     isComfirmed,
-    addressMap, tokenDecimalsMap,
+    addressMap,
     onShowSendToken, onCheckBalances,
     onGenerateAddress,
     networkReady, checkingBalanceDoneTime, checkingBalances, checkingBalancesError,
@@ -31,12 +31,10 @@ function AddressView(props) {
     exchangeRates, onSelectCurrency, convertTo,
     onGetExchangeRates,
     getExchangeRatesDoneTime, getExchangeRatesLoading, getExchangeRatesError,
-    onShowTokenChooser,
    } = props;
 
   const addressTableProps = {
     addressMap,
-    tokenDecimalsMap,
     onShowSendToken,
     exchangeRates,
     onSelectCurrency,
@@ -60,8 +58,6 @@ function AddressView(props) {
     getExchangeRatesDoneTime,
     getExchangeRatesLoading,
     getExchangeRatesError,
-
-    onShowTokenChooser,
   };
 
   let addressViewContent = (

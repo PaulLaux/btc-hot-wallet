@@ -27,10 +27,8 @@ import {
 
   SHOW_SEND_TOKEN,
   HIDE_SEND_TOKEN,
-  SHOW_TOKEN_CHOOSER,
-  HIDE_TOKEN_CHOOSER,
 
-  UPDATE_TOKEN_INFO,
+  SET_ADDRESSES,
 
   GENERATE_ADDRESS,
   GENERATE_ADDRESS_SUCCESS,
@@ -76,51 +74,21 @@ const initialState = {
   isComfirmed: false, // if true then we have a valid keystore
 
   keystore: false,
-  addressList: false,
+  addressList: false, // { address1: { index: 1, balance: weiString / false }, ... }
 
-  /*
-  addressList: {
-    address1: {
-        order: 1
-        eth: {balance: weiString / false},
-        eos: {balance: weiString / false},
-        ppt: {balance: weiString / false},
-      }
-  } */
-
-  exchangeRates: {},
-  convertTo: 'eth_usd',
+  exchangeRates: {}, // price of one coin: { usd: 2238.55, eur: 2007.67, ... }
+  convertTo: 'usd', // currency shown under the balances, or 'none'
 
   addressListLoading: false, // for addressList loading and error
   addressListError: false,
   addressListMsg: false,
 
   isShowSendToken: false,
-  isShowTokenChooser: false,
 
   saveWalletLoading: false,
   saveWalletError: false,
   loadWalletLoading: false,
   loadWalletError: false,
-
-  // default tokens - must exist on defaultNetwork (see TokenChooser/tokens.tokenlist.json)
-  tokenInfo: {
-    eth: {
-      name: 'Ethereum',
-      contractAddress: null,
-      decimals: 18,
-    },
-    usdc: {
-      name: 'USD Coin (Sepolia)',
-      contractAddress: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
-      decimals: 6,
-    },
-    link: {
-      name: 'Chainlink (Sepolia)',
-      contractAddress: '0x779877A7B0D9E8603169DdbD7836e478b4624789',
-      decimals: 18,
-    },
-  },
 };
 
 export default createReducer(initialState, (builder) => builder
@@ -171,18 +139,16 @@ export default createReducer(initialState, (builder) => builder
   })
 
   .addCase(CHANGE_BALANCE, (s, a) => {
-    // ignore balances that arrive after the address or token was removed
-    const token = s.addressList && s.addressList[a.address] && s.addressList[a.address][a.symbol];
-    if (token) token.balance = a.balance;
+    // ignore balances that arrive after the address was removed
+    const row = s.addressList && s.addressList[a.address];
+    if (row) row.balance = a.balance;
   })
 
   .addCase(SHOW_SEND_TOKEN, (s) => { s.isShowSendToken = true; })
   .addCase(HIDE_SEND_TOKEN, (s) => { s.isShowSendToken = false; })
-  .addCase(SHOW_TOKEN_CHOOSER, (s) => { s.isShowTokenChooser = true; })
-  .addCase(HIDE_TOKEN_CHOOSER, (s) => { s.isShowTokenChooser = false; })
 
-  .addCase(UPDATE_TOKEN_INFO, (s, a) => {
-    Object.assign(s, { isShowTokenChooser: false, addressListError: false, tokenInfo: a.tokenInfo, addressList: a.addressMap });
+  .addCase(SET_ADDRESSES, (s, a) => {
+    Object.assign(s, { addressListError: false, addressList: a.addressMap });
   })
 
   .addCase(GENERATE_ADDRESS, (s) => {
@@ -195,7 +161,7 @@ export default createReducer(initialState, (builder) => builder
       addressListMsg: 'New address generated succesfully',
       keystore: a.keystore,
     });
-    s.addressList[a.newAddress] = a.tokenMap;
+    s.addressList[a.newAddress] = { index: a.index, balance: false };
   })
   .addCase(GENERATE_ADDRESS_ERROR, (s, a) => {
     Object.assign(s, { addressListLoading: false, addressListError: a.error });
@@ -206,8 +172,8 @@ export default createReducer(initialState, (builder) => builder
 
   .addCase(SET_EXCHANGE_RATES, (s, a) => {
     s.exchangeRates = a.rates;
-    // the chosen token left the token list: show USD instead of an empty column
-    if (s.convertTo !== 'none' && !a.rates[s.convertTo]) s.convertTo = 'eth_usd';
+    // the chosen currency has no rate any more: show USD instead of an empty column
+    if (s.convertTo !== 'none' && !a.rates[s.convertTo]) s.convertTo = 'usd';
   })
   .addCase(SELECT_CURRENCY, (s, a) => { s.convertTo = a.convertTo; })
 

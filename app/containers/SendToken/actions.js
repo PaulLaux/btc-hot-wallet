@@ -19,17 +19,15 @@ import {
 } from './constants';
 
 /**
- * Update from address and token, both parameters are optional
- * @param  {string} [address] '0xffd..'
- * @param  {object} [sendTokenSymbol] tokens to send (eth not included)
+ * Update from address
+ * @param  {string} address '0xffd..'
  *
- * @return {object}    An action object with a type of CHANGE_FROM, address and sendTokenSymbol
+ * @return {object}    An action object with a type of CHANGE_FROM and address
  */
-export function changeFrom(address, sendTokenSymbol) {
+export function changeFrom(address) {
   return {
     type: CHANGE_FROM,
     address,
-    sendTokenSymbol,
   };
 }
 

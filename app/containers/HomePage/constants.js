@@ -26,10 +26,7 @@ export const CHANGE_BALANCE = 'eth-hot-wallet/HomePage/CHANGE_BALANCE';
 export const SHOW_SEND_TOKEN = 'eth-hot-wallet/HomePage/SHOW_SEND_TOKEN';
 export const HIDE_SEND_TOKEN = 'eth-hot-wallet/HomePage/HIDE_SEND_TOKEN';
 
-export const SHOW_TOKEN_CHOOSER = 'eth-hot-wallet/HomePage/SHOW_TOKEN_CHOOSER';
-export const HIDE_TOKEN_CHOOSER = 'eth-hot-wallet/HomePage/HIDE_TOKEN_CHOOSER';
-
-export const UPDATE_TOKEN_INFO = 'eth-hot-wallet/HomePage/UPDATE_TOKEN_INFO';
+export const SET_ADDRESSES = 'eth-hot-wallet/HomePage/SET_ADDRESSES';
 
 export const GENERATE_ADDRESS = 'eth-hot-wallet/HomePage/GENERATE_ADDRESS';
 export const GENERATE_ADDRESS_SUCCESS = 'eth-hot-wallet/HomePage/GENERATE_ADDRESS_SUCCESS';

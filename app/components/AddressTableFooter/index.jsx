@@ -6,7 +6,7 @@
 
 import React from 'react';
 import styled from 'styled-components';
-import { BarsOutlined, GlobalOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { GlobalOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 
 import IconButton from 'components/IconButton';
 
@@ -33,8 +33,6 @@ function AddressTableFooter(props) {
     onGetExchangeRates,
     getExchangeRatesLoading,
     getExchangeRatesError,
-
-    onShowTokenChooser,
   } = props;
 
   return (
@@ -65,14 +63,6 @@ function AddressTableFooter(props) {
         error={getExchangeRatesError}
         disabled={!networkReady}
         popconfirmMsg="Refresh exchange rates?"
-      />
-      <br />
-      <IconButton
-        text="Select Tokens"
-        icon={<BarsOutlined />}
-        onClick={onShowTokenChooser}
-        type="primary"
-        // onClick, loading, error, disabled, popconfirmMsg
       />
       <br /><br />
     </Div>

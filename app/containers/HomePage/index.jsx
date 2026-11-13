@@ -17,7 +17,6 @@ import { createStructuredSelector } from 'reselect';
 /* Components:  */
 import AddressView from 'components/AddressView';
 import SendToken from 'containers/SendToken';
-import TokenChooser from 'containers/TokenChooser';
 import GenerateWalletModal from 'components/GenerateWalletModal';
 import RestoreWalletModal from 'components/RestoreWalletModal';
 import SubHeader from 'components/SubHeader';
@@ -49,8 +48,6 @@ import {
   restoreWalletFromSeed,
   showSendToken,
   hideSendToken,
-  showTokenChooser,
-  hideTokenChooser,
   generateAddress,
   lockWallet,
   unlockWallet,
@@ -75,7 +72,6 @@ import {
   makeSelectAddressMap,
   makeSelectShowRestoreWallet,
   makeSelectIsShowSendToken,
-  makeSelectIsShowTokenChooser,
   makeSelectAddressListLoading,
   makeSelectAddressListError,
   makeSelectAddressListMsg,
@@ -85,7 +81,6 @@ import {
   makeSelectSaveWalletError,
   makeSelectLoadWalletLoading,
   makeSelectLoadwalletError,
-  makeSelectTokenDecimalsMap,
 } from './selectors';
 
 export class HomePage extends React.PureComponent {
@@ -110,9 +105,7 @@ export class HomePage extends React.PureComponent {
       onGenerateAddress,
       onCheckBalances,
       isComfirmed,
-      // addressList,
       addressMap,
-      tokenDecimalsMap,
 
       onShowRestoreWallet,
       isShowRestoreWallet,
@@ -126,10 +119,6 @@ export class HomePage extends React.PureComponent {
       isShowSendToken,
       onShowSendToken,
       onHideSendToken,
-      onShowTokenChooser,
-      onHideTokenChooser,
-
-      isShowTokenChooser,
 
       addressListLoading,
       addressListError,
@@ -205,12 +194,9 @@ export class HomePage extends React.PureComponent {
       generateKeystoreLoading,
       generateKeystoreError,
       isComfirmed,
-      // addressList,
       addressMap,
-      tokenDecimalsMap,
 
       onShowSendToken,
-      onShowTokenChooser,
 
       onCheckBalances,
       onGenerateAddress,
@@ -231,7 +217,6 @@ export class HomePage extends React.PureComponent {
     };
 
     const sendTokenProps = { isShowSendToken, onHideSendToken };
-    const tokenChooserProps = { isShowTokenChooser, onHideTokenChooser };
 
     return (
       <div>
@@ -242,7 +227,6 @@ export class HomePage extends React.PureComponent {
           <RestoreWalletModal {...restoreWalletModalProps} />
           <AddressView {...addressViewProps} />
           <SendToken {...sendTokenProps} />
-          <TokenChooser {...tokenChooserProps} />
         </Content>
         <PageFooter />
       </div>
@@ -298,17 +282,11 @@ export function mapDispatchToProps(dispatch) {
       if (evt !== undefined && evt.preventDefault) evt.preventDefault();
       dispatch(checkBalances());
     },
-    onShowSendToken: (address, tokenSymbol) => {
-      dispatch(showSendToken(address, tokenSymbol));
+    onShowSendToken: (address) => {
+      dispatch(showSendToken(address));
     },
     onHideSendToken: () => {
       dispatch(hideSendToken());
-    },
-    onShowTokenChooser: () => {
-      dispatch(showTokenChooser());
-    },
-    onHideTokenChooser: () => {
-      dispatch(hideTokenChooser());
     },
     onLockWallet: (evt) => {
       if (evt !== undefined && evt.preventDefault) evt.preventDefault();
@@ -349,16 +327,13 @@ const mapStateToProps = createStructuredSelector({
   generateKeystoreError: makeSelectGenerateKeystoreError(),
   restoreWalletError: makeSelectRestoreWalletError(),
   isComfirmed: makeSelectIsComfirmed(),
-  // addressList: makeSelectAddressList(),
   addressMap: makeSelectAddressMap(),
-  tokenDecimalsMap: makeSelectTokenDecimalsMap(),
   // keystore: makeSelectKeystore(),
   isShowRestoreWallet: makeSelectShowRestoreWallet(),
   userSeed: makeSelectUserSeed(),
   userPassword: makeSelectUserPassword(),
 
   isShowSendToken: makeSelectIsShowSendToken(),
-  isShowTokenChooser: makeSelectIsShowTokenChooser(),
 
   addressListLoading: makeSelectAddressListLoading(),
   addressListError: makeSelectAddressListError(),

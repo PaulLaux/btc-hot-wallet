@@ -25,7 +25,7 @@ function WelcomeText() {
     <div>
       <H1>Welcome to ETH Hot Wallet <br />To begin, create or restore a wallet for Ethereum, Base, Arbitrum or Optimism</H1>
       <H2>
-        Send ETH and ERC-20 tokens without a browser extension. Keys are generated and used for signing inside the browser and never sent. <br />
+        Send ETH without a browser extension. Keys are generated and used for signing inside the browser and never sent. <br />
         The seed is stored encrypted with your password. When the wallet is locked, you can only view balances.
       </H2>
     </div>
