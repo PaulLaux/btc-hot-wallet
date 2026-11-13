@@ -9,16 +9,16 @@ describe('store', () => {
   it('keeps addresses and balances as plain objects', () => {
     const store = createStore();
     store.dispatch(generateKeystoreSuccess(keystore, 'test'));
-    store.dispatch(changeBalance(address, '5000000'));
-    store.dispatch(changeBalance(keystore.addresses.main[0], '1')); // not in the table: ignored
+    store.dispatch(changeBalance(address, '5000000', '-80000'));
+    store.dispatch(changeBalance(keystore.addresses.main[0], '1', '0')); // not in the table: ignored
 
-    expect(makeSelectAddressMap()(store.getState())).toEqual({ [address]: { index: 1, balance: '5000000' } });
+    expect(makeSelectAddressMap()(store.getState())).toEqual({ [address]: { index: 1, balance: '5000000', unconfirmed: '-80000' } });
   });
 
   it('shows the addresses of one chain at a time, without the old balances', () => {
     const store = createStore();
     store.dispatch(generateKeystoreSuccess(keystore, 'test'));
-    store.dispatch(changeBalance(address, '5000000'));
+    store.dispatch(changeBalance(address, '5000000', '0'));
     store.dispatch(setAddresses(keystore.addresses.main, 'main'));
     expect(makeSelectChain()(store.getState())).toBe('main');
     expect(makeSelectAddressMap()(store.getState())).toEqual({ [keystore.addresses.main[0]]: { index: 1, balance: false } });
@@ -28,9 +28,9 @@ describe('store', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const store = createStore();
     store.dispatch(generateKeystoreSuccess(keystore, 'test'));
-    store.dispatch(changeBalance(address, '150000000'));
+    store.dispatch(changeBalance(address, '150000000', '0'));
     expect(error).not.toHaveBeenCalled();
-    store.dispatch(changeBalance(address, 1n));
+    store.dispatch(changeBalance(address, 1n, '0'));
     expect(error.mock.calls.some(([msg]) => msg.includes('non-serializable value was detected in the state'))).toBe(true);
     error.mockRestore();
   });

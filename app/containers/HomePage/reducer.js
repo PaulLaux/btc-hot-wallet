@@ -75,7 +75,7 @@ const initialState = {
 
   keystore: false,
   chain: false, // the addresses shown are of this chain: 'main' or 'test' (see utils/bitcoin.js)
-  addressList: false, // { address1: { index: 1, balance: satsString / false }, ... }
+  addressList: false, // { address1: { index: 1, balance: satsString / false, unconfirmed: satsString }, ... }
 
   exchangeRates: {}, // price of one coin: { usd: 2238.55, eur: 2007.67, ... }
   convertTo: 'usd', // currency shown under the balances, or 'none'
@@ -143,7 +143,7 @@ export default createReducer(initialState, (builder) => builder
   .addCase(CHANGE_BALANCE, (s, a) => {
     // ignore balances that arrive after the address was removed
     const row = s.addressList && s.addressList[a.address];
-    if (row) row.balance = a.balance;
+    if (row) Object.assign(row, { balance: a.balance, unconfirmed: a.unconfirmed });
   })
 
   .addCase(SHOW_SEND_TOKEN, (s) => { s.isShowSendToken = true; })

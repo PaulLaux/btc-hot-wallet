@@ -179,15 +179,16 @@ export function* SendTransaction() {
 
 /* *************  Polling saga and polling flow for check balances ***************** */
 // Balances are kept as decimal strings (sats): Redux state must be serializable
-export function* getBalance(address) {
-  return (yield call([net, net.addressInfo], address)).balance;
+export function* checkBalance(address) {
+  const { balance, unconfirmed } = yield call([net, net.addressInfo], address);
+  yield put(changeBalance(address, balance, unconfirmed));
 }
 
 export function* checkAllBalances() {
   try {
     const addresses = Object.keys(yield select(makeSelectAddressMap()));
     for (const address of addresses) {
-      yield put(changeBalance(address, yield call(getBalance, address)));
+      yield call(checkBalance, address);
     }
     yield put(checkBalancesSuccess());
   } catch (err) {

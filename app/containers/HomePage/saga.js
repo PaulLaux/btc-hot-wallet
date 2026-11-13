@@ -39,7 +39,7 @@ import { generatedPasswordLength, offlineModeString, defaultNetwork, localStorag
 
 import { timer } from 'utils/common';
 
-import { getBalance } from 'containers/Header/saga';
+import { checkBalance } from 'containers/Header/saga';
 
 import {
   generateWalletSucces,
@@ -52,7 +52,6 @@ import {
   restoreWalletFromSeedSuccess,
   generateAddressSuccess,
   generateAddressError,
-  changeBalance,
   lockWallet,
   unlockWalletSuccess,
   unlockWalletError,
@@ -156,8 +155,7 @@ export function* generateAddress() {
 
     // balance checking for new address (will be aborted in offline mode)
     try {
-      const balance = yield call(getBalance, newAddress);
-      yield put(changeBalance(newAddress, balance));
+      yield call(checkBalance, newAddress);
     } catch { /* offline */ }
   } catch (err) {
     yield call(timer, 1000); // eye candy

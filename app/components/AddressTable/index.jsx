@@ -50,10 +50,12 @@ function AddressTable(props) {
   const currencyDropdownProps = { exchangeRates, onSelectCurrency, convertTo };
   const narrow = !Grid.useBreakpoint().md; // phones: compact cells, short addresses
 
-  const rows = Object.entries(addressMap).map(([address, { balance }]) => ({
+  const rows = Object.entries(addressMap).map(([address, { balance, unconfirmed }]) => ({
     key: address,
     address,
     balance: formatBalance(balance),
+    // part of the balance: incoming payments (+) or sends (-) not in a block yet
+    unconfirmed: unconfirmed && unconfirmed !== '0' ? `${formatBalance(unconfirmed)} unconfirmed` : '',
     convert: convertBalance(balance, exchangeRates, convertTo),
   }));
 
@@ -78,7 +80,13 @@ function AddressTable(props) {
         dataIndex="balance"
         key="balance"
         align="center"
-        render={(balance, record) => <>{balance}<br /><Text type="secondary">{record.convert}</Text></>}
+        render={(balance, record) => (
+          <>
+            {balance}<br />
+            {record.unconfirmed && <><Text type="secondary" italic>{record.unconfirmed}</Text><br /></>}
+            <Text type="secondary">{record.convert}</Text>
+          </>
+        )}
       />
       <Column
         key="action"
