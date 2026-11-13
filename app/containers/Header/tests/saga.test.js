@@ -1,15 +1,15 @@
 import { put } from 'redux-saga/effects';
 import * as btc from '@scure/btc-signer';
 import { hex } from '@scure/base';
-import { loadNetwork, confirmSendTransaction, SendTransaction } from '../saga';
+import { loadNetwork, findUsedAddresses, confirmSendTransaction, SendTransaction } from '../saga';
 import { confirmSendTransactionError, sendTransactionSuccess, sendTransactionError } from 'containers/SendToken/actions';
 import { COMFIRM_SEND_TRANSACTION_SUCCESS } from 'containers/SendToken/constants';
 import { setAddresses } from 'containers/HomePage/actions';
-import { buildTx } from 'utils/bitcoin';
+import { buildTx, deriveAddresses } from 'utils/bitcoin';
 import { coinsOf } from 'utils/tests/coins';
 
 // action creators show antd messages, which need a DOM
-vi.mock('antd', () => ({ message: { success: () => {}, error: () => {} } }));
+vi.mock('antd', () => ({ message: { success: () => {}, error: () => {}, warning: () => {} } }));
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
 // the first two testnet addresses of the mnemonic; only the first is in the wallet
@@ -35,9 +35,10 @@ describe('confirmSendTransaction', () => {
 });
 
 describe('on Testnet4', () => {
-  // connect: the test answers the network check with a height, so nothing goes to the API
+  // connect: the test answers the network check with a height and the scan with nothing found,
+  // so nothing goes to the API
   let shown;
-  beforeAll(() => { shown = run(loadNetwork({ networkName: 'Testnet4' }), keystore, 160000, undefined, undefined); });
+  beforeAll(() => { shown = run(loadNetwork({ networkName: 'Testnet4' }), keystore, 160000, undefined, undefined, null); });
 
   it('shows the addresses of the test chain', () => {
     expect(shown).toEqual(put(setAddresses([from], 'test')));
@@ -73,5 +74,43 @@ describe('on Testnet4', () => {
     const { psbt } = buildTx(coinsOf(to, [100000n]), to, from, 50000n, 2n, 'test');
     expect(run(SendTransaction(), keystore, to, 'password', psbt, 'Testnet4', mnemonic))
       .toEqual(put(sendTransactionError(`Address ${to} is not in this wallet`)));
+  });
+});
+
+describe('findUsedAddresses', () => {
+  const addresses = deriveAddresses(mnemonic, 'test', 0, 12);
+  // feeds the password and mnemonic, then whether each checked address was used; returns the result
+  const scan = (networkName, password, used = []) => {
+    const gen = findUsedAddresses(networkName, 'test', keystore);
+    gen.next();
+    let step = gen.next(password);
+    if (step.done) return step.value; // locked, or this network was checked already
+    step = gen.next(mnemonic);
+    used.forEach((isUsed, i) => {
+      expect(step.value.payload.args[0]).toBe(addresses[i]); // checks the addresses in order
+      step = gen.next(isUsed);
+    });
+    expect(step.done).toBe(true);
+    return step.value;
+  };
+  const unused = Array(10).fill(false);
+
+  it('does nothing while the wallet is locked', () => {
+    expect(scan('Signet', false)).toBe(null);
+  });
+
+  it('adds the addresses up to the last used one of the first ten', () => {
+    expect(scan('Signet', 'password', [false, false, true, ...Array(7).fill(false)]).addresses)
+      .toEqual({ main: keystore.addresses.main, test: addresses.slice(0, 3) });
+  });
+
+  it('continues one at a time while the last checked address was used, once per network', () => {
+    const used = [...Array(9).fill(false), true, true, false];
+    expect(scan('Mainnet', 'password', used).addresses.test).toEqual(addresses.slice(0, 11));
+    expect(scan('Mainnet', 'password')).toBe(null); // already checked in this session
+  });
+
+  it('keeps the addresses when none beyond them was used', () => {
+    expect(scan('Testnet4', 'password', unused)).toBe(null);
   });
 });

@@ -8,13 +8,17 @@ import { networks } from 'utils/bitcoin';
 // Blocks to confirm within: slow ~1 hour, normal ~30 minutes, fast next block
 export const feeTargets = { slow: 6, normal: 3, fast: 1 };
 
-/** fetch for URLs under apis[0] that tries the next API on a network error, 429 or 5xx */
-export const failoverFetch = (apis) => async (url, opts) => {
+/**
+ * fetch for URLs under apis[0] that tries the next API on a network error, 429, 5xx or no answer within
+ * `timeout` ms. (mempool.space sends its 429 without CORS headers: browsers report a network error.)
+ */
+export const failoverFetch = (apis, timeout = 15000) => async (url, opts = {}) => {
   const path = url.slice(apis[0].length);
   for (let i = 0; ; i += 1) {
     const last = i === apis.length - 1;
+    const signal = opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout);
     try {
-      const res = await fetch(apis[i] + path, opts);
+      const res = await fetch(apis[i] + path, { ...opts, signal });
       if (last || (res.status !== 429 && res.status < 500)) return res;
     } catch (err) {
       if (last) throw err;

@@ -33,6 +33,13 @@ describe('failoverFetch', () => {
     }
   });
 
+  it('tries the next API when one does not answer in time', async () => {
+    vi.stubGlobal('fetch', (target, { signal }) => (target.startsWith(apis[0])
+      ? new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason)))
+      : Promise.resolve(new Response('100'))));
+    expect(await (await failoverFetch(apis, 20)(url)).text()).toBe('100');
+  });
+
   it('returns other errors as they are, and the last answer when all fail', async () => {
     let calls = stubFetch({ [`GET ${url}`]: [400, 'Bad request'] });
     expect((await get(url)).status).toBe(400);

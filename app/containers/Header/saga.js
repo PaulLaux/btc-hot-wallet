@@ -1,4 +1,5 @@
 import { all, take, call, delay, put, select, takeLatest, race, fork } from 'redux-saga/effects';
+import { message } from 'antd';
 
 import {
   makeSelectKeystore,
@@ -9,6 +10,8 @@ import {
   changeBalance,
   setExchangeRates,
   setAddresses,
+  generateKeystoreSuccess,
+  saveWallet,
 } from 'containers/HomePage/actions';
 import request from 'utils/request';
 
@@ -38,7 +41,7 @@ import {
 } from 'utils/constants';
 import { timer } from 'utils/common';
 import { openVault, keyFor } from 'utils/wallet';
-import { checkAddress, toSats, toBtc, buildTx, signTx } from 'utils/bitcoin';
+import { deriveAddresses, checkAddress, toSats, toBtc, buildTx, signTx } from 'utils/bitcoin';
 import { connect } from 'utils/esplora';
 
 import { makeSelectNetworkName } from './selectors';
@@ -69,6 +72,38 @@ import Network from './network';
 
 // Esplora client of the connected network (utils/esplora.js), null when offline
 let net = null;
+// networks checked for used addresses in this session
+const scanned = new Set();
+
+/**
+ * After a restore, find the addresses the wallet used before: check addresses 0-9, then one more while the
+ * last checked one was ever used. One request at a time: public APIs limit bursts. Runs while the wallet is
+ * unlocked (deriving addresses needs the seed), once per network per session.
+ * @return {object|null} the keystore with the addresses up to the last used one, or null if it has them all
+ */
+export function* findUsedAddresses(networkName, chain, keystore) {
+  const password = yield select(makeSelectPassword());
+  if (!password || scanned.has(networkName)) return null;
+  try {
+    const mnemonic = yield call(openVault, keystore, password);
+    const isUsed = function* (address) { return (yield call([net, net.addressInfo], address)).used; };
+    const addresses = deriveAddresses(mnemonic, chain, 0, 10);
+    const used = [];
+    while (used.length < addresses.length) {
+      used.push(yield call(isUsed, addresses[used.length]));
+      if (used.length === addresses.length && used[used.length - 1]) {
+        addresses.push(...deriveAddresses(mnemonic, chain, addresses.length, 1));
+      }
+    }
+    scanned.add(networkName);
+    const count = used.lastIndexOf(true) + 1;
+    if (count <= keystore.addresses[chain].length) return null;
+    return { ...keystore, addresses: { ...keystore.addresses, [chain]: addresses.slice(0, count) } };
+  } catch (err) {
+    message.warning(`Could not check for used addresses: ${err.message}`, 10);
+    return null;
+  }
+}
 
 /**
  * Connect to the network's API, check that it serves this network, and show the network's addresses
@@ -100,8 +135,14 @@ export function* loadNetwork(action) {
     yield call(timer, 600);
 
     yield put(loadNetworkSuccess(height));
-    // the addresses of this network's chain, without the balances of the previous network
-    yield put(setAddresses(keystore.addresses[network.chain], network.chain));
+    const found = yield call(findUsedAddresses, action.networkName, network.chain, keystore);
+    if (found) {
+      yield put(generateKeystoreSuccess(found, network.chain)); // the keystore with the used addresses, shown
+      yield put(saveWallet());
+    } else {
+      // the addresses of this network's chain, without the balances of the previous network
+      yield put(setAddresses(keystore.addresses[network.chain], network.chain));
+    }
 
     // actions after succesfull network load :
     yield put(checkBalances());
