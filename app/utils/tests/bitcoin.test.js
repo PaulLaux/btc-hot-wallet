@@ -57,8 +57,8 @@ describe('transactions', () => {
   const coins = coinsOf(from, [100000n, 546n, 30000n]);
 
   it('pays the amount, sends the change back to the sender, and signals RBF', () => {
-    const { psbt, fee, vsize, inputs } = buildTx(coins, from, to, 120000n, 2n, 'test');
-    expect({ fee, vsize, inputs }).toEqual({ fee: 418, vsize: 209, inputs: 2 });
+    const { psbt, fee, inputs } = buildTx(coins, from, to, 120000n, 2n, 'test');
+    expect({ fee, inputs }).toEqual({ fee: 418, inputs: 2 }); // 209 vB at 2 sat/vB
     const tx = btc.Transaction.fromPSBT(hex.decode(psbt));
     expect(outputsOf(tx)).toEqual({ [to]: 120000n, [from]: 130000n - 120000n - 418n });
     expect(tx.getInput(0).sequence).toBe(0xfffffffd);

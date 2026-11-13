@@ -75,7 +75,7 @@ const initialState = {
 
   keystore: false,
   chain: false, // the addresses shown are of this chain: 'main' or 'test' (see utils/bitcoin.js)
-  addressList: false, // { address1: { index: 1, balance: satsString / false, unconfirmed: satsString }, ... }
+  addressList: false, // { address1: { balance: satsString / false, unconfirmed: satsString }, ... }
 
   exchangeRates: {}, // price of one coin: { usd: 2238.55, eur: 2007.67, ... }
   convertTo: 'usd', // currency shown under the balances, or 'none'
@@ -163,7 +163,7 @@ export default createReducer(initialState, (builder) => builder
       addressListMsg: 'New address generated succesfully',
       keystore: a.keystore,
     });
-    s.addressList[a.newAddress] = { index: a.index, balance: false };
+    s.addressList[a.newAddress] = { balance: false };
   })
   .addCase(GENERATE_ADDRESS_ERROR, (s, a) => {
     Object.assign(s, { addressListLoading: false, addressListError: a.error });

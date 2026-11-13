@@ -16,7 +16,7 @@ export const failoverFetch = (apis, timeout = 15000) => async (url, opts = {}) =
   const path = url.slice(apis[0].length);
   for (let i = 0; ; i += 1) {
     const last = i === apis.length - 1;
-    const signal = opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout);
+    const signal = AbortSignal.any([opts.signal, AbortSignal.timeout(timeout)].filter(Boolean));
     try {
       const res = await fetch(apis[i] + path, { ...opts, signal });
       if (last || (res.status !== 429 && res.status < 500)) return res;

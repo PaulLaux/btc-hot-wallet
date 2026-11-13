@@ -55,7 +55,7 @@ const coinAmount = (coin) => btc.RawTx.decode(coin.nonWitnessUtxo).outputs[coin.
  * Unsigned transaction that pays `amount` sats to `to` from the coins of `from`, with change back to `from`.
  * @param {object[]} coins the coins of `from`, from EsploraProvider.unspent (with their funding transaction)
  * @param {bigint} feeRate sat/vB
- * @return {object} { psbt: hex, fee: sats, vsize, inputs: count }
+ * @return {object} { psbt: hex, fee: sats, inputs: count }
  */
 export function buildTx(coins, from, to, amount, feeRate, chain) {
   checkAddress(to, chain);
@@ -67,7 +67,6 @@ export function buildTx(coins, from, to, amount, feeRate, chain) {
   return {
     psbt: hex.encode(selected.tx.toPSBT()),
     fee: Number(selected.fee),
-    vsize: Math.ceil(selected.weight / 4),
     inputs: selected.inputs.length,
   };
 }

@@ -21,7 +21,7 @@ import {
 
 /**
  * Update from address
- * @param  {string} address '0xffd..'
+ * @param  {string} address 'bc1q..'
  *
  * @return {object}    An action object with a type of CHANGE_FROM and address
  */

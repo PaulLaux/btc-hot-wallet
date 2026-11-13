@@ -225,11 +225,10 @@ export function generateKeystore() {
 }
 
 /**
- * Address map for the address table: { address: { index: 1, balance: false }, ... }
+ * Address map for the address table, in the order of the addresses: { address: { balance: false }, ... }
  * @param {string[]} addresses
  */
-const createAddressMap = (addresses) =>
-  Object.fromEntries(addresses.map((address, i) => [address, { index: i + 1, balance: false }]));
+const createAddressMap = (addresses) => Object.fromEntries(addresses.map((address) => [address, { balance: false }]));
 
 /**
  * The keystore is ready: show its addresses of the chain
@@ -340,16 +339,14 @@ export function generateAddress() {
  *
  * @param {object} keystore the keystore including the new address
  * @param {string} newAddress the new address
- * @param {number} index address serial number of generation
  *
- * @return {object} An action object with a type of GENERATE_ADDRESS_SUCCESS, keystore, newAddress and index
+ * @return {object} An action object with a type of GENERATE_ADDRESS_SUCCESS, keystore and newAddress
  */
-export function generateAddressSuccess(keystore, newAddress, index) {
+export function generateAddressSuccess(keystore, newAddress) {
   return {
     type: GENERATE_ADDRESS_SUCCESS,
     keystore,
     newAddress,
-    index,
   };
 }
 

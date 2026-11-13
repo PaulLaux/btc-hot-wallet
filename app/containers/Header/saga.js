@@ -74,6 +74,7 @@ import Network from './network';
 let net = null;
 // networks checked for used addresses in this session
 const scanned = new Set();
+const isUsed = async (address) => (await net.addressInfo(address)).used;
 
 /**
  * After a restore, find the addresses the wallet used before: check addresses 0-9, then one more while the
@@ -86,17 +87,13 @@ export function* findUsedAddresses(networkName, chain, keystore) {
   if (!password || scanned.has(networkName)) return null;
   try {
     const mnemonic = yield call(openVault, keystore, password);
-    const isUsed = function* (address) { return (yield call([net, net.addressInfo], address)).used; };
     const addresses = deriveAddresses(mnemonic, chain, 0, 10);
-    const used = [];
-    while (used.length < addresses.length) {
-      used.push(yield call(isUsed, addresses[used.length]));
-      if (used.length === addresses.length && used[used.length - 1]) {
-        addresses.push(...deriveAddresses(mnemonic, chain, addresses.length, 1));
-      }
+    let count = 0; // the addresses up to the last used one
+    for (let i = 0; i < 10 || i === count; i += 1) {
+      if (i === addresses.length) addresses.push(...deriveAddresses(mnemonic, chain, i, 1));
+      if (yield call(isUsed, addresses[i])) count = i + 1;
     }
     scanned.add(networkName);
-    const count = used.lastIndexOf(true) + 1;
     if (count <= keystore.addresses[chain].length) return null;
     return { ...keystore, addresses: { ...keystore.addresses, [chain]: addresses.slice(0, count) } };
   } catch (err) {

@@ -148,9 +148,8 @@ export function* generateAddress() {
 
     const chain = yield select(makeSelectChain());
     const newKs = addAddress(ks, yield call(openVault, ks, password), chain);
-    const newAddress = newKs.addresses[chain].slice(-1)[0];
-    const index = newKs.addresses[chain].length; // serial index for sorting by generation order;
-    yield put(generateAddressSuccess(newKs, newAddress, index));
+    const newAddress = newKs.addresses[chain].at(-1);
+    yield put(generateAddressSuccess(newKs, newAddress));
     yield put(saveWallet());
 
     // balance checking for new address (will be aborted in offline mode)

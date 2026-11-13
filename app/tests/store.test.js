@@ -12,7 +12,7 @@ describe('store', () => {
     store.dispatch(changeBalance(address, '5000000', '-80000'));
     store.dispatch(changeBalance(keystore.addresses.main[0], '1', '0')); // not in the table: ignored
 
-    expect(makeSelectAddressMap()(store.getState())).toEqual({ [address]: { index: 1, balance: '5000000', unconfirmed: '-80000' } });
+    expect(makeSelectAddressMap()(store.getState())).toEqual({ [address]: { balance: '5000000', unconfirmed: '-80000' } });
   });
 
   it('shows the addresses of one chain at a time, without the old balances', () => {
@@ -21,7 +21,7 @@ describe('store', () => {
     store.dispatch(changeBalance(address, '5000000', '0'));
     store.dispatch(setAddresses(keystore.addresses.main, 'main'));
     expect(makeSelectChain()(store.getState())).toBe('main');
-    expect(makeSelectAddressMap()(store.getState())).toEqual({ [keystore.addresses.main[0]]: { index: 1, balance: false } });
+    expect(makeSelectAddressMap()(store.getState())).toEqual({ [keystore.addresses.main[0]]: { balance: false } });
   });
 
   it('checks that state stays serializable: balances are strings, not bigint', () => {
