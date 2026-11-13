@@ -34,7 +34,7 @@ describe('wallet in localStorage', () => {
     storage = {
       getItem: (k) => (items.has(k) ? items.get(k) : null),
       setItem: (k, v) => items.set(k, String(v)),
-      clear: () => items.clear(),
+      removeItem: (k) => items.delete(k),
     };
     vi.stubGlobal('localStorage', storage);
     vi.spyOn(console, 'log').mockImplementation(() => {}); // loadWalletError logs
@@ -82,12 +82,14 @@ describe('wallet in localStorage', () => {
     expect(load().value.payload.action.type).toBe(LOAD_WALLET_ERROR);
   });
 
-  it('clears localStorage, and survives storage blocked by the browser', () => {
+  it('deletes only its own wallet, and survives storage blocked by the browser', () => {
     storage.setItem(localStorageKey, JSON.stringify(vault));
+    storage.setItem('wallet', '{"addresses":["0x9858EfFD232B4033E47d90003D41EC34EcaEda94"]}'); // ETH Hot Wallet's vault
     expect(deleteWallet().next().done).toBe(true);
     expect(storage.getItem(localStorageKey)).toBe(null);
+    expect(storage.getItem('wallet')).not.toBe(null);
 
-    vi.stubGlobal('localStorage', { clear: () => { throw new DOMException('The operation is insecure.', 'SecurityError'); } });
+    vi.stubGlobal('localStorage', { removeItem: () => { throw new DOMException('The operation is insecure.', 'SecurityError'); } });
     expect(() => deleteWallet().next()).not.toThrow();
   });
 });

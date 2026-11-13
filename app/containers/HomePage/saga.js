@@ -263,11 +263,12 @@ export function* loadWalletS() {
 }
 
 /**
- * delete all values from localStorage
+ * Delete the saved wallet from localStorage, and nothing else: another wallet (such as ETH Hot Wallet)
+ * may store its vault on the same origin
  */
 export function* deleteWallet() {
   try {
-    localStorage.clear();
+    localStorage.removeItem(localStorageKey);
   } catch { /* storage blocked by the browser: nothing was saved */ }
 }
 
