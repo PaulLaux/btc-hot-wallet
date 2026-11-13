@@ -20,6 +20,6 @@ export const github = 'https://github.com/PaulLaux/eth-hot-wallet';
 
 // APIs:
 // The CoinGecko ID of each coin (see chains in utils/bitcoin.js)
-export const coinGeckoIds = { BTC: 'bitcoin' };
+export const coinGeckoIds = { BTC: 'bitcoin', LTC: 'litecoin' };
 // Keyless CoinGecko endpoint, queried with ?ids=<CoinGecko IDs>&vs_currencies=...
 export const coinGeckoPriceApi = 'https://api.coingecko.com/api/v3/simple/price';

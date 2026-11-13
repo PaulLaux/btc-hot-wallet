@@ -37,7 +37,7 @@ function GenerateWalletModal(props) {
       <Alert
         title={<b>The seed is imposible to recover if lost</b>}
         description={<b>Copy the generated seed to a safe location.<br />
-                        Addresses: BIP-84 m/84'/0'/0'/0 (test networks m/84'/1'/0'/0).<br /> Recover lost password using the seed.</b>} // eslint-disable-line
+                        Addresses: BIP-84 m/84'/0'/0'/0, Litecoin m/84'/2'/0'/0, test networks m/84'/1'/0'/0.<br /> Recover lost password using the seed.</b>} // eslint-disable-line
         type="warning"
         showIcon
         closable

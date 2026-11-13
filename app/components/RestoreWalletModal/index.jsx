@@ -46,7 +46,7 @@ function RestoreWalletModal(props) {
         </Button >,
       ]}
     >
-      <Description>{"12 or 24 words. Addresses: BIP-84 m/84'/0'/0'/0 (test networks m/84'/1'/0'/0)"}</Description>
+      <Description>{"12 or 24 words. Addresses: BIP-84 m/84'/0'/0'/0, Litecoin m/84'/2'/0'/0, test networks m/84'/1'/0'/0"}</Description>
       <Input
         placeholder="Enter seed"
         prefix={<WalletOutlined />}

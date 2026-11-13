@@ -26,11 +26,14 @@ describe('store', () => {
 
   it('shows the coin and the prices of the shown addresses', () => {
     const store = createStore();
-    store.dispatch(setExchangeRates({ BTC: { usd: 94000.5, eur: 81000.25 } }));
+    store.dispatch(setExchangeRates({ BTC: { usd: 94000.5, eur: 81000.25 }, LTC: { usd: 80.5, eur: 70.25 } }));
     expect(makeSelectExchangeRates()(store.getState())).toEqual({}); // no addresses shown yet
     store.dispatch(generateKeystoreSuccess(keystore, 'test'));
     expect(makeSelectCoin()(store.getState())).toBe('BTC');
     expect(makeSelectExchangeRates()(store.getState())).toEqual({ usd: 94000.5, eur: 81000.25 });
+    store.dispatch(setAddresses(['ltc1qjmxnz78nmc8nq77wuxh25n2es7rzm5c2rkk4wh'], 'ltc'));
+    expect(makeSelectCoin()(store.getState())).toBe('LTC');
+    expect(makeSelectExchangeRates()(store.getState())).toEqual({ usd: 80.5, eur: 70.25 });
   });
 
   it('checks that state stays serializable: balances are strings, not bigint', () => {

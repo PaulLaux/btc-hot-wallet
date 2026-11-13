@@ -34,6 +34,7 @@ import { changeFrom } from 'containers/SendToken/actions';
 import generateString from 'utils/crypto';
 import askPassword from 'utils/askPassword';
 import { newMnemonic, isMnemonicValid, createVault, openVault, addAddress } from 'utils/wallet';
+import { chains } from 'utils/bitcoin';
 
 import { generatedPasswordLength, offlineModeString, defaultNetwork, localStorageKey, autoLockTime } from 'utils/constants';
 
@@ -251,6 +252,8 @@ export function* loadWalletS() {
     if (!ks) {
       throw new Error('No keystore found in localStorage');
     }
+    // a wallet saved before Litecoin has none of its addresses: shown empty until one is added
+    ks.addresses = { ...Object.fromEntries(Object.keys(chains).map((chain) => [chain, []])), ...ks.addresses };
 
     yield put(generateKeystoreSuccess(ks, Network[defaultNetwork].chain));
     yield put(loadNetwork(defaultNetwork));

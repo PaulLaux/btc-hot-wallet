@@ -1,12 +1,14 @@
 /**
- * Bitcoin network access over public Esplora REST APIs: each network lists several (mempool.space first,
- * blockstream.info as fallback). Coins come with their funding transaction, so their amounts are verified.
+ * Network access over public Esplora REST APIs (see network.js). Coins come with their funding transaction,
+ * so their amounts are verified.
  */
 import { EsploraProvider } from '@scure/btc-signer/net.js';
 import { chains } from 'utils/bitcoin';
 
 // Blocks to confirm within: slow ~1 hour, normal ~30 minutes, fast next block
 export const feeTargets = { slow: 6, normal: 3, fast: 1 };
+// The same speeds in mempool.space's own fee API, for networks with recommendedFees
+const recommended = { slow: 'hourFee', normal: 'halfHourFee', fast: 'fastestFee' };
 
 /**
  * fetch for URLs under apis[0] that tries the next API on a network error, 429, 5xx or no answer within
@@ -26,8 +28,8 @@ export const failoverFetch = (apis, timeout = 15000) => async (url, opts = {}) =
   }
 };
 
-/** Client for a network from network.js: { chain, apis, genesis } */
-export function connect({ chain, apis, genesis }) {
+/** Client for a network from network.js: { chain, apis, genesis, recommendedFees } */
+export function connect({ chain, apis, genesis, recommendedFees }) {
   const apiFetch = failoverFetch(apis);
   const provider = new EsploraProvider(apiFetch, apis[0], chains[chain].network);
   const get = async (path) => {
@@ -54,7 +56,9 @@ export function connect({ chain, apis, genesis }) {
     /** Unspent coins of the address, each with its funding transaction (for bitcoin.js buildTx) */
     coins: async (address) => (await provider.unspent(address)).utxo,
     /** Fee rate in sat/vB for 'slow', 'normal' or 'fast' */
-    feeRate: (speed) => provider.fee(feeTargets[speed]),
+    feeRate: async (speed) => (recommendedFees
+      ? BigInt(Math.ceil(JSON.parse(await get('/v1/fees/recommended'))[recommended[speed]]))
+      : provider.fee(feeTargets[speed])),
     /** Broadcast a signed transaction (hex); returns its id */
     broadcast: (txHex) => provider.sendTx(txHex),
   };

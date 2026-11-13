@@ -88,6 +88,12 @@ describe('connect', () => {
     expect(await connect(testnet4).feeRate('fast')).toBe(1n);
   });
 
+  it('reads fee rates from mempool.space\'s recommended fees on networks without /fee-estimates', async () => {
+    stubFetch({ [api('/v1/fees/recommended')]: [200, { fastestFee: 3, halfHourFee: 2, hourFee: 1.5, economyFee: 1, minimumFee: 1 }] });
+    const net = connect({ ...testnet4, chain: 'ltctest', recommendedFees: true });
+    expect([await net.feeRate('fast'), await net.feeRate('normal'), await net.feeRate('slow')]).toEqual([3n, 2n, 2n]);
+  });
+
   it('broadcasts the hex and returns the txid, or the node error', async () => {
     const txid = 'ab'.repeat(32);
     let calls = stubFetch({ [`POST ${apis[0]}/tx`]: [200, txid] });

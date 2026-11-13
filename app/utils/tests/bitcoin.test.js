@@ -7,6 +7,9 @@ const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abando
 // BIP-84 test vectors m/84'/0'/0'/0/{0,1}, and the testnet addresses of m/84'/1'/0'/0/{0,1}
 const main = ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu', 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g'];
 const test = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97'];
+// Litecoin m/84'/2'/0'/0/{0,1}, and its testnet: the keys of the test addresses above
+const ltc = ['ltc1qjmxnz78nmc8nq77wuxh25n2es7rzm5c2rkk4wh', 'ltc1qwlezpr3890hcp6vva9twqh27mr6edadreqvhnn'];
+const ltctest = ['tltc1q6rz28mcfaxtmd6v789l9rrlrusdprr9pesrjxk', 'tltc1qd7spv5q28348xl4myc8zmh983w5jx32ctl5d4h'];
 
 // { address: amount } of a transaction's outputs
 const outputsOf = (tx) => Object.fromEntries([...Array(tx.outputsLength).keys()].map((i) => {
@@ -19,6 +22,8 @@ describe('addresses', () => {
     expect(deriveAddresses(mnemonic, 'main', 0, 2)).toEqual(main);
     expect(deriveAddresses(mnemonic, 'test', 0, 2)).toEqual(test);
     expect(deriveAddresses(mnemonic, 'test', 1, 1)).toEqual([test[1]]);
+    expect(deriveAddresses(mnemonic, 'ltc', 0, 2)).toEqual(ltc);
+    expect(deriveAddresses(mnemonic, 'ltctest', 0, 2)).toEqual(ltctest);
   });
 
   it('accepts every address type of the chain, and nothing else', () => {
@@ -29,6 +34,10 @@ describe('addresses', () => {
     expect(() => checkAddress(main[0], 'test')).toThrow('Not a Bitcoin testnet address');
     expect(() => checkAddress(`${main[0].slice(0, -1)}x`, 'main')).toThrow(); // bad checksum
     expect(() => checkAddress('0x9858EfFD232B4033E47d90003D41EC34EcaEda94', 'main')).toThrow();
+    expect(() => checkAddress(ltc[0], 'main')).toThrow('Not a Bitcoin address');
+    expect(() => checkAddress(main[0], 'ltc')).toThrow('Not a Litecoin address');
+    expect(() => checkAddress(test[0], 'ltctest')).toThrow('Not a Litecoin testnet address');
+    expect(() => checkAddress(ltctest[0], 'ltctest')).not.toThrow();
   });
 });
 
@@ -67,6 +76,14 @@ describe('transactions', () => {
   it('never spends coins of 546 sats or less', () => {
     // 100000 alone can't pay 99900 + fee; with the 546-sat coin it could
     expect(() => buildTx(coinsOf(from, [100000n, 546n]), from, to, 99900n, 1n, 'test')).toThrow('Not enough funds');
+  });
+
+  it('adds no change below the dust limit of the coin: 546 sats on Bitcoin, 5460 on Litecoin', () => {
+    // change of 3859 sats; the coins of test[0] are also those of ltctest[0] (same key, same script)
+    const outputs = (chain, sender, recipient) => btc.Transaction.fromPSBT(hex.decode(
+      buildTx(coinsOf(from, [100000n]), sender, recipient, 96000n, 1n, chain).psbt)).outputsLength;
+    expect(outputs('test', from, to)).toBe(2);
+    expect(outputs('ltctest', ltctest[0], ltctest[1])).toBe(1);
   });
 
   it('refuses amounts the coins cannot cover, and destinations on another network', () => {

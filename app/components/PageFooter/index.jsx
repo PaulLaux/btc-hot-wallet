@@ -34,7 +34,7 @@ function PageFooter() {
         <Col sm={12} xs={24}>
           {'BTC Hot Wallet - '}
           <a href={github} target="_blank" rel="noopener noreferrer">
-            Bitcoin web wallet (GitHub)
+            Bitcoin and Litecoin web wallet (GitHub)
           </a><br />
           Created using: @scure/btc-signer, React, Ant Design...
         </Col>

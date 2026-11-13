@@ -65,12 +65,13 @@ describe('wallet in localStorage', () => {
     expect(storage.getItem(localStorageKey)).toBe(null);
   });
 
-  it('loads a saved wallet', () => {
+  it('loads a saved wallet; one saved before Litecoin gets no Litecoin addresses', () => {
     storage.setItem(localStorageKey, JSON.stringify(vault));
     const gen = loadWalletS();
     gen.next();
     gen.next();
-    expect(gen.next(false).value).toEqual(put(generateKeystoreSuccess(vault, 'test'))); // Testnet4 is the default
+    const loaded = { ...vault, addresses: { ...vault.addresses, ltc: [], ltctest: [] } };
+    expect(gen.next(false).value).toEqual(put(generateKeystoreSuccess(loaded, 'test'))); // Testnet4 is the default
     expect(gen.next().value).toEqual(put(loadNetwork(defaultNetwork)));
     expect(gen.next().value).toEqual(put(loadWalletSuccess()));
   });

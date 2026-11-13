@@ -1,12 +1,12 @@
 /**
  * HD wallet: a BIP-39 mnemonic encrypted with the user's password (PBKDF2 + AES-GCM).
- * Addresses (BIP-84, see utils/bitcoin.js) are stored unencrypted per chain, { main: [...], test: [...] },
+ * Addresses (BIP-84, see chains in utils/bitcoin.js) are stored unencrypted per chain, { main: [...], ltc: [...], ... },
  * so a locked wallet can still show balances.
  */
 import { hex } from '@scure/base';
 import { generateMnemonic, validateMnemonic } from '@scure/bip39';
 import { wordlist as english } from '@scure/bip39/wordlists/english.js';
-import { deriveAddresses, privateKey } from 'utils/bitcoin';
+import { chains, deriveAddresses, privateKey } from 'utils/bitcoin';
 
 const PBKDF2_ITERATIONS = 600000;
 
@@ -30,7 +30,7 @@ export async function createVault(mnemonic, password) {
     salt: hex.encode(salt),
     iv: hex.encode(iv),
     data: hex.encode(new Uint8Array(data)),
-    addresses: { main: deriveAddresses(mnemonic, 'main', 0, 1), test: deriveAddresses(mnemonic, 'test', 0, 1) },
+    addresses: Object.fromEntries(Object.keys(chains).map((chain) => [chain, deriveAddresses(mnemonic, chain, 0, 1)])),
   };
 }
 

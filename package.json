@@ -1,7 +1,7 @@
 {
   "name": "btc-hot-wallet",
   "version": "0.6.0",
-  "description": "Bitcoin Hot Wallet",
+  "description": "Bitcoin and Litecoin Hot Wallet",
   "repository": {
     "type": "git",
     "url": "git://github.com/PaulLaux/eth-hot-wallet.git"

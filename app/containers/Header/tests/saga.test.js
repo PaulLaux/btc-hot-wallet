@@ -54,6 +54,16 @@ describe('on Testnet4', () => {
     expect(action.psbt).toBe(buildTx(coins, from, to, 120000n, 2n, 'test').psbt);
   });
 
+  it('confirms in the coin of the network, and refuses an address of another coin', () => {
+    const [ltcFrom, ltcTo] = ['tltc1q6rz28mcfaxtmd6v789l9rrlrusdprr9pesrjxk', 'tltc1qd7spv5q28348xl4myc8zmh983w5jx32ctl5d4h'];
+    const gen = confirmSendTransaction();
+    run(gen, ltcFrom, '0.0012', ltcTo, 'normal', 'Litecoin Testnet');
+    // the same keys as from and to: the coins of from are also those of ltcFrom
+    expect(gen.next([coins, 2n]).value.payload.action.msg.split('\n')[0]).toBe('Send 0.0012 LTC on Litecoin Testnet');
+    expect(run(confirmSendTransaction(), ltcFrom, '0.001', to, 'normal', 'Litecoin Testnet'))
+      .toEqual(put(confirmSendTransactionError(`Not a Litecoin testnet address: ${to}`)));
+  });
+
   it('refuses a destination on another network', () => {
     const mainAddress = 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g';
     expect(confirm('0.001', mainAddress)).toEqual(put(confirmSendTransactionError(`Not a Bitcoin testnet address: ${mainAddress}`)));
