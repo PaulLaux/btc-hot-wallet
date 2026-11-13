@@ -1,7 +1,3 @@
-/* The coin: its ticker and CoinGecko ID for prices */
-export const symbol = 'BTC';
-export const coinGeckoId = 'bitcoin';
-
 /* Auto generated password lenght */
 export const generatedPasswordLength = 12;
 
@@ -23,5 +19,7 @@ export const localStorageKey = 'btc-wallet';
 export const github = 'https://github.com/PaulLaux/eth-hot-wallet';
 
 // APIs:
-// Keyless CoinGecko endpoint, queried with ?ids=<coinGeckoId>&vs_currencies=...
+// The CoinGecko ID of each coin (see chains in utils/bitcoin.js)
+export const coinGeckoIds = { BTC: 'bitcoin' };
+// Keyless CoinGecko endpoint, queried with ?ids=<CoinGecko IDs>&vs_currencies=...
 export const coinGeckoPriceApi = 'https://api.coingecko.com/api/v3/simple/price';

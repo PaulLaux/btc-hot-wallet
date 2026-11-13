@@ -15,7 +15,7 @@ Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) 
 - Balances include unconfirmed transactions, with a note
 - Locks itself 15 minutes after unlocking
 - Content Security Policy: the page runs only its own scripts and connects only to its APIs and CoinGecko
-- Networks: Mainnet, Testnet4, Signet or offline
+- Networks: Bitcoin, Testnet4, Signet or offline
 - Balances converted to USD and EUR
 - Responsive layout for mobile
 

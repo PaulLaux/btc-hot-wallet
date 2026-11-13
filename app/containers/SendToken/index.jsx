@@ -16,9 +16,8 @@ import SendFee from 'components/SendFee';
 import SendConfirmationView from 'components/SendConfirmationView';
 import SendProgress from 'components/SendProgress';
 
-import { makeSelectAddressMap } from 'containers/HomePage/selectors';
+import { makeSelectAddressMap, makeSelectCoin } from 'containers/HomePage/selectors';
 import { makeSelectTxExplorer } from 'containers/Header/selectors';
-import { symbol } from 'utils/constants';
 
 import {
   changeFrom,
@@ -53,6 +52,7 @@ function SendToken(props) {
     from,
     to,
     addressList,
+    coin,
     onChangeFrom,
     amount,
     locked,
@@ -89,6 +89,7 @@ function SendToken(props) {
     sendInProgress,
     isSendComfirmationLocked,
     sendError,
+    coin,
   };
   const SendProgressProps = { sendInProgress, sendError, sendTx, txExplorer };
 
@@ -105,13 +106,13 @@ function SendToken(props) {
     <div style={{ maxWidth: '600px', margin: 'auto' }}>
       <Modal
         open={isShowSendToken}
-        title={`Send ${symbol}`}
+        title={`Send ${coin}`}
         onOk={onHideSendToken}
         onCancel={onHideSendToken}
         footer={modalFooter}
       >
         <SendFrom {...SendFromProps} /> <br />
-        <SendAmount {...SendAmountProps} /> {symbol}<br /> <br />
+        <SendAmount {...SendAmountProps} /> {coin}<br /> <br />
         <SendTo {...SendToProps} /> <br />
         <SendFee {...SendFeeProps} /> <br />
         <Button onClick={onConfirmSendTransaction} disabled={locked} >
@@ -131,6 +132,7 @@ const mapStateToProps = createStructuredSelector({
   amount: makeSelectAmount(),
   feeSpeed: makeSelectFeeSpeed(),
   addressList: makeSelectAddressMap(),
+  coin: makeSelectCoin(),
 
   locked: makeSelectLocked(),
 

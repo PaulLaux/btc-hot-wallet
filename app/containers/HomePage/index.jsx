@@ -76,6 +76,7 @@ import {
   makeSelectAddressListError,
   makeSelectAddressListMsg,
   makeSelectExchangeRates,
+  makeSelectCoin,
   makeSelectConvertTo,
   makeSelectSaveWalletLoading,
   makeSelectSaveWalletError,
@@ -106,6 +107,7 @@ export class HomePage extends React.PureComponent {
       onCheckBalances,
       isComfirmed,
       addressMap,
+      coin,
 
       onShowRestoreWallet,
       isShowRestoreWallet,
@@ -195,6 +197,7 @@ export class HomePage extends React.PureComponent {
       generateKeystoreError,
       isComfirmed,
       addressMap,
+      coin,
 
       onShowSendToken,
 
@@ -344,8 +347,8 @@ const mapStateToProps = createStructuredSelector({
   checkingBalances: makeSelectCheckingBalances(),
   checkingBalancesError: makeSelectCheckingBalancesError(),
 
-  // exchangeRates: makeSelectExchangeRates(),
   exchangeRates: makeSelectExchangeRates(),
+  coin: makeSelectCoin(),
   convertTo: makeSelectConvertTo(),
 
   getExchangeRatesDoneTime: makeSelectGetExchangeRatesDoneTime(),

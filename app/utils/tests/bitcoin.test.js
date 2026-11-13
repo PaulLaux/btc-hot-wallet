@@ -1,6 +1,6 @@
 import * as btc from '@scure/btc-signer';
 import { hex } from '@scure/base';
-import { deriveAddresses, privateKey, checkAddress, toSats, toBtc, buildTx, signTx } from '../bitcoin';
+import { deriveAddresses, privateKey, checkAddress, toSats, fromSats, buildTx, signTx } from '../bitcoin';
 import { coinsOf } from './coins';
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
@@ -26,7 +26,7 @@ describe('addresses', () => {
       'bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr']
       .forEach((address) => expect(() => checkAddress(address, 'main')).not.toThrow());
     expect(() => checkAddress(test[0], 'main')).toThrow('Not a Bitcoin address');
-    expect(() => checkAddress(main[0], 'test')).toThrow('Not a testnet address');
+    expect(() => checkAddress(main[0], 'test')).toThrow('Not a Bitcoin testnet address');
     expect(() => checkAddress(`${main[0].slice(0, -1)}x`, 'main')).toThrow(); // bad checksum
     expect(() => checkAddress('0x9858EfFD232B4033E47d90003D41EC34EcaEda94', 'main')).toThrow();
   });
@@ -46,9 +46,9 @@ describe('amounts', () => {
   });
 
   it('shows sats as BTC with every digit', () => {
-    expect(toBtc(150000000n)).toBe('1.5');
-    expect(toBtc('1')).toBe('0.00000001');
-    expect(toBtc('0')).toBe('0');
+    expect(fromSats(150000000n)).toBe('1.5');
+    expect(fromSats('1')).toBe('0.00000001');
+    expect(fromSats('0')).toBe('0');
   });
 });
 
@@ -71,7 +71,7 @@ describe('transactions', () => {
 
   it('refuses amounts the coins cannot cover, and destinations on another network', () => {
     expect(() => buildTx(coins, from, to, 130000n, 2n, 'test')).toThrow('Not enough funds');
-    expect(() => buildTx(coins, from, main[1], 1000n, 2n, 'test')).toThrow('Not a testnet address');
+    expect(() => buildTx(coins, from, main[1], 1000n, 2n, 'test')).toThrow('Not a Bitcoin testnet address');
   });
 
   it('signs exactly the built transaction, and only with the key of the sender', () => {

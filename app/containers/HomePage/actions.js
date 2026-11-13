@@ -233,7 +233,7 @@ const createAddressMap = (addresses) => Object.fromEntries(addresses.map((addres
 /**
  * The keystore is ready: show its addresses of the chain
  * @param {keystore} keystore The new keystore
- * @param {string} chain 'main' or 'test' (see utils/bitcoin.js)
+ * @param {string} chain a key of chains in utils/bitcoin.js
  *
  * @return {object}      An action object with a type of GENERATE_KEYSTORE_SUCCESS
  */
@@ -426,9 +426,9 @@ export function unlockWalletError(error) {
 
 
 /**
- * Store the price of one coin per currency
+ * Store the price of each coin per currency
  *
- * @param  {object} rates example: { usd: 2238.55, eur: 2007.67 }
+ * @param  {object} rates example: { BTC: { usd: 94000.5, eur: 81000.25 } }
  * @return {object} An action object with a type of SET_EXCHANGE_RATES and the rates
  */
 export function setExchangeRates(rates) {

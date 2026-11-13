@@ -74,10 +74,10 @@ const initialState = {
   isComfirmed: false, // if true then we have a valid keystore
 
   keystore: false,
-  chain: false, // the addresses shown are of this chain: 'main' or 'test' (see utils/bitcoin.js)
+  chain: false, // the addresses shown are of this chain: a key of chains in utils/bitcoin.js
   addressList: false, // { address1: { balance: satsString / false, unconfirmed: satsString }, ... }
 
-  exchangeRates: {}, // price of one coin: { usd: 2238.55, eur: 2007.67, ... }
+  exchangeRates: {}, // price of each coin: { BTC: { usd: 94000.5, eur: 81000.25 }, ... }
   convertTo: 'usd', // currency shown under the balances, or 'none'
 
   addressListLoading: false, // for addressList loading and error
@@ -172,11 +172,7 @@ export default createReducer(initialState, (builder) => builder
   .addCase(LOCK_WALLET, (s) => { s.password = false; })
   .addCase(UNLOCK_WALLET_SUCCESS, (s, a) => { s.password = a.password; })
 
-  .addCase(SET_EXCHANGE_RATES, (s, a) => {
-    s.exchangeRates = a.rates;
-    // the chosen currency has no rate any more: show USD instead of an empty column
-    if (s.convertTo !== 'none' && !a.rates[s.convertTo]) s.convertTo = 'usd';
-  })
+  .addCase(SET_EXCHANGE_RATES, (s, a) => { s.exchangeRates = a.rates; })
   .addCase(SELECT_CURRENCY, (s, a) => { s.convertTo = a.convertTo; })
 
   .addCase(CLOSE_WALLET, () => initialState)

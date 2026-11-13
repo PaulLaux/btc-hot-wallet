@@ -37,11 +37,11 @@ import {
   timeBetweenCheckbalances,
   offlineModeString,
   coinGeckoPriceApi,
-  coinGeckoId,
+  coinGeckoIds,
 } from 'utils/constants';
 import { timer } from 'utils/common';
 import { openVault, keyFor } from 'utils/wallet';
-import { deriveAddresses, checkAddress, toSats, toBtc, buildTx, signTx } from 'utils/bitcoin';
+import { chains, deriveAddresses, checkAddress, toSats, fromSats, buildTx, signTx } from 'utils/bitcoin';
 import { connect } from 'utils/esplora';
 
 import { makeSelectNetworkName } from './selectors';
@@ -173,7 +173,7 @@ export function* confirmSendTransaction() {
     const tx = buildTx(coins, from, to, sats, feeRate, chain);
 
     const msg = [
-      `Send ${toBtc(sats)} BTC on ${networkName}`,
+      `Send ${fromSats(sats)} ${chains[chain].coin} on ${networkName}`,
       `From: ${from}`,
       `To: ${to}`,
       `Fee: ${tx.fee} sats (${feeRate} sat/vB, ${tx.inputs} ${tx.inputs === 1 ? 'coin' : 'coins'} spent)`,
@@ -262,12 +262,12 @@ function* watchPollData() {
 /* ******************************************************************************** */
 
 /**
- * Price of one coin per currency from CoinGecko: { usd: 94000.5, eur: 81000.25 }
+ * Price of each coin per currency from CoinGecko: { BTC: { usd: 94000.5, eur: 81000.25 }, ... }
  */
 export function* getRates() {
   try {
-    const prices = yield call(request, `${coinGeckoPriceApi}?ids=${coinGeckoId}&vs_currencies=usd,eur`);
-    yield put(setExchangeRates(prices[coinGeckoId] || {}));
+    const prices = yield call(request, `${coinGeckoPriceApi}?ids=${Object.values(coinGeckoIds).join(',')}&vs_currencies=usd,eur`);
+    yield put(setExchangeRates(Object.fromEntries(Object.entries(coinGeckoIds).map(([coin, id]) => [coin, prices[id] || {}]))));
     yield put(getExchangeRatesSuccess());
   } catch (err) {
     yield put(getExchangeRatesError(err.message));

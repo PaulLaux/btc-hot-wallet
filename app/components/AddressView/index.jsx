@@ -23,7 +23,7 @@ function AddressView(props) {
   const {
     generateKeystoreLoading, generateKeystoreError,
     isComfirmed,
-    addressMap,
+    addressMap, coin,
     onShowSendToken, onCheckBalances,
     onGenerateAddress,
     networkReady, checkingBalanceDoneTime, checkingBalances, checkingBalancesError,
@@ -35,6 +35,7 @@ function AddressView(props) {
 
   const addressTableProps = {
     addressMap,
+    coin,
     onShowSendToken,
     exchangeRates,
     onSelectCurrency,

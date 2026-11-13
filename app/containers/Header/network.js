@@ -5,7 +5,7 @@ const esplora = (path) => [`https://mempool.space${path}/api`, `https://blockstr
 
 // The network menu lists them in this order, under their group
 const Network = {
-  Mainnet: {
+  Bitcoin: {
     group: 'Bitcoin',
     chain: 'main',
     apis: esplora(''),
@@ -13,14 +13,14 @@ const Network = {
     tx_explorer: 'https://mempool.space/tx/',
   },
   Testnet4: {
-    group: 'Test networks',
+    group: 'Bitcoin',
     chain: 'test',
     apis: esplora('/testnet4'),
     genesis: '00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043',
     tx_explorer: 'https://mempool.space/testnet4/tx/',
   },
   Signet: {
-    group: 'Test networks',
+    group: 'Bitcoin',
     chain: 'test',
     apis: esplora('/signet'),
     genesis: '00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6',

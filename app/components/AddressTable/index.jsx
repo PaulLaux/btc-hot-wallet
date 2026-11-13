@@ -8,8 +8,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Table, Grid, Typography } from 'antd';
 import CurrencyDropdown from 'components/CurrencyDropdown';
-import { symbol } from 'utils/constants';
-import { toBtc } from 'utils/bitcoin';
+import { fromSats } from 'utils/bitcoin';
 
 const { Column } = Table;
 const { Text } = Typography;
@@ -28,18 +27,19 @@ const AddrTable = styled(Table)`
   }
 `;
 
-/** Balance in sats (decimal string) as BTC, every digit kept; n/a until checked */
-export const formatBalance = (balance) => (balance === false ? 'n/a' : toBtc(balance));
+/** Balance in sats (decimal string) in coins, every digit kept; n/a until checked */
+export const formatBalance = (balance) => (balance === false ? 'n/a' : fromSats(balance));
 
 /** Value of the balance in the chosen currency, rounded to 5 decimals; empty without a rate */
 export const convertBalance = (balance, exchangeRates, convertTo) => {
-  const value = balance === false ? NaN : toBtc(balance) * exchangeRates[convertTo];
+  const value = balance === false ? NaN : fromSats(balance) * exchangeRates[convertTo];
   return Number.isFinite(value) ? String(+value.toFixed(5)) : '';
 };
 
 function AddressTable(props) {
   const {
     addressMap,
+    coin,
     onShowSendToken,
     exchangeRates,
     onSelectCurrency,
@@ -75,7 +75,7 @@ function AddressTable(props) {
         render={(address) => <Text copyable={{ text: address }}>{narrow ? shortAddress(address) : address}</Text>}
       />
       <Column
-        title={<>Balance ({symbol})<br /><CurrencyDropdown {...currencyDropdownProps} /></>}
+        title={<>Balance ({coin})<br /><CurrencyDropdown {...currencyDropdownProps} /></>}
         dataIndex="balance"
         key="balance"
         align="center"

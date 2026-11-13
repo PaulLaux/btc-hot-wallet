@@ -1,7 +1,6 @@
 import { call, put } from 'redux-saga/effects';
 import { autoLock, saveWalletS, loadWalletS, deleteWallet } from '../saga';
-import { lockWallet, saveWalletSuccess, saveWalletError, generateKeystoreSuccess, loadWalletSuccess, setExchangeRates, selectCurrency } from '../actions';
-import reducer from '../reducer';
+import { lockWallet, saveWalletSuccess, saveWalletError, generateKeystoreSuccess, loadWalletSuccess } from '../actions';
 import { LOAD_WALLET_ERROR } from '../constants';
 import { loadNetwork } from 'containers/Header/actions';
 import { defaultNetwork, localStorageKey } from 'utils/constants';
@@ -91,16 +90,5 @@ describe('wallet in localStorage', () => {
 
     vi.stubGlobal('localStorage', { removeItem: () => { throw new DOMException('The operation is insecure.', 'SecurityError'); } });
     expect(() => deleteWallet().next()).not.toThrow();
-  });
-});
-
-describe('exchange rates', () => {
-  it('falls back to USD when the chosen currency has no rate any more', () => {
-    const all = setExchangeRates({ usd: 2000, eur: 1800, btc: 0.03 });
-    let state = reducer(reducer(undefined, all), selectCurrency('btc'));
-    expect(reducer(state, all).convertTo).toBe('btc');
-    expect(reducer(state, setExchangeRates({ usd: 2000, eur: 1800 })).convertTo).toBe('usd');
-    state = reducer(state, selectCurrency('none'));
-    expect(reducer(state, setExchangeRates({ usd: 2000 })).convertTo).toBe('none');
   });
 });

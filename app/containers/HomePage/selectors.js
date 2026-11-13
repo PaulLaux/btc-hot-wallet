@@ -3,6 +3,7 @@
  */
 
 import { createSelector } from 'reselect';
+import { chains } from 'utils/bitcoin';
 
 const selectHome = (state) => state.home;
 
@@ -103,9 +104,16 @@ const makeSelectAddressListMsg = () => createSelector(
   selectHome,
   (homeState) => homeState.addressListMsg
 );
+/** Price of the shown addresses' coin: { usd: 94000.5, eur: 81000.25 } */
 const makeSelectExchangeRates = () => createSelector(
   selectHome,
-  (homeState) => homeState.exchangeRates
+  (homeState) => homeState.exchangeRates[chains[homeState.chain]?.coin] || {}
+);
+
+/** Ticker of the shown addresses' coin: 'BTC' */
+const makeSelectCoin = () => createSelector(
+  selectHome,
+  (homeState) => chains[homeState.chain]?.coin
 );
 
 const makeSelectConvertTo = () => createSelector(
@@ -154,6 +162,7 @@ export {
   makeSelectAddressMap,
 
   makeSelectExchangeRates,
+  makeSelectCoin,
   makeSelectConvertTo,
 
   makeSelectSaveWalletLoading,

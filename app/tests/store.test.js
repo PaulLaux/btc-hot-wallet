@@ -1,6 +1,6 @@
 import createStore from '../store';
-import { generateKeystoreSuccess, changeBalance, setAddresses } from 'containers/HomePage/actions';
-import { makeSelectAddressMap, makeSelectChain } from 'containers/HomePage/selectors';
+import { generateKeystoreSuccess, changeBalance, setAddresses, setExchangeRates } from 'containers/HomePage/actions';
+import { makeSelectAddressMap, makeSelectChain, makeSelectCoin, makeSelectExchangeRates } from 'containers/HomePage/selectors';
 
 const keystore = { addresses: { main: ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu'], test: ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl'] } };
 const [address] = keystore.addresses.test;
@@ -22,6 +22,15 @@ describe('store', () => {
     store.dispatch(setAddresses(keystore.addresses.main, 'main'));
     expect(makeSelectChain()(store.getState())).toBe('main');
     expect(makeSelectAddressMap()(store.getState())).toEqual({ [keystore.addresses.main[0]]: { balance: false } });
+  });
+
+  it('shows the coin and the prices of the shown addresses', () => {
+    const store = createStore();
+    store.dispatch(setExchangeRates({ BTC: { usd: 94000.5, eur: 81000.25 } }));
+    expect(makeSelectExchangeRates()(store.getState())).toEqual({}); // no addresses shown yet
+    store.dispatch(generateKeystoreSuccess(keystore, 'test'));
+    expect(makeSelectCoin()(store.getState())).toBe('BTC');
+    expect(makeSelectExchangeRates()(store.getState())).toEqual({ usd: 94000.5, eur: 81000.25 });
   });
 
   it('checks that state stays serializable: balances are strings, not bigint', () => {

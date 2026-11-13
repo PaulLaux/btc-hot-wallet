@@ -56,7 +56,7 @@ describe('on Testnet4', () => {
 
   it('refuses a destination on another network', () => {
     const mainAddress = 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g';
-    expect(confirm('0.001', mainAddress)).toEqual(put(confirmSendTransactionError(`Not a testnet address: ${mainAddress}`)));
+    expect(confirm('0.001', mainAddress)).toEqual(put(confirmSendTransactionError(`Not a Bitcoin testnet address: ${mainAddress}`)));
   });
 
   it('signs exactly the confirmed transaction and broadcasts it', () => {
@@ -106,8 +106,8 @@ describe('findUsedAddresses', () => {
 
   it('continues one at a time while the last checked address was used, once per network', () => {
     const used = [...Array(9).fill(false), true, true, false];
-    expect(scan('Mainnet', 'password', used).addresses.test).toEqual(addresses.slice(0, 11));
-    expect(scan('Mainnet', 'password')).toBe(null); // already checked in this session
+    expect(scan('Bitcoin', 'password', used).addresses.test).toEqual(addresses.slice(0, 11));
+    expect(scan('Bitcoin', 'password')).toBe(null); // already checked in this session
   });
 
   it('keeps the addresses when none beyond them was used', () => {

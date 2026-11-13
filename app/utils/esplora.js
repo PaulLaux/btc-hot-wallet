@@ -3,7 +3,7 @@
  * blockstream.info as fallback). Coins come with their funding transaction, so their amounts are verified.
  */
 import { EsploraProvider } from '@scure/btc-signer/net.js';
-import { networks } from 'utils/bitcoin';
+import { chains } from 'utils/bitcoin';
 
 // Blocks to confirm within: slow ~1 hour, normal ~30 minutes, fast next block
 export const feeTargets = { slow: 6, normal: 3, fast: 1 };
@@ -29,7 +29,7 @@ export const failoverFetch = (apis, timeout = 15000) => async (url, opts = {}) =
 /** Client for a network from network.js: { chain, apis, genesis } */
 export function connect({ chain, apis, genesis }) {
   const apiFetch = failoverFetch(apis);
-  const provider = new EsploraProvider(apiFetch, apis[0], networks[chain]);
+  const provider = new EsploraProvider(apiFetch, apis[0], chains[chain].network);
   const get = async (path) => {
     const res = await apiFetch(apis[0] + path);
     if (!res.ok) throw new Error(`${path}: ${res.status} ${await res.text()}`);
