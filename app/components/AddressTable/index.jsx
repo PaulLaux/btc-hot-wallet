@@ -7,10 +7,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Table, Grid, Typography } from 'antd';
-import { formatUnits } from 'viem';
-
 import CurrencyDropdown from 'components/CurrencyDropdown';
-import { symbol, decimals } from 'utils/constants';
+import { symbol } from 'utils/constants';
+import { toBtc } from 'utils/bitcoin';
 
 const { Column } = Table;
 const { Text } = Typography;
@@ -29,12 +28,12 @@ const AddrTable = styled(Table)`
   }
 `;
 
-/** Balance in base units (decimal string) as coins, every digit kept; n/a until checked */
-export const formatBalance = (balance) => (balance === false ? 'n/a' : formatUnits(BigInt(balance), decimals));
+/** Balance in sats (decimal string) as BTC, every digit kept; n/a until checked */
+export const formatBalance = (balance) => (balance === false ? 'n/a' : toBtc(balance));
 
 /** Value of the balance in the chosen currency, rounded to 5 decimals; empty without a rate */
 export const convertBalance = (balance, exchangeRates, convertTo) => {
-  const value = balance === false ? NaN : formatUnits(BigInt(balance), decimals) * exchangeRates[convertTo];
+  const value = balance === false ? NaN : toBtc(balance) * exchangeRates[convertTo];
   return Number.isFinite(value) ? String(+value.toFixed(5)) : '';
 };
 

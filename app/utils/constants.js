@@ -1,6 +1,5 @@
-/* The coin: its ticker, base units per coin (10 ** decimals) and CoinGecko ID for prices */
+/* The coin: its ticker and CoinGecko ID for prices */
 export const symbol = 'BTC';
-export const decimals = 8;
 export const coinGeckoId = 'bitcoin';
 
 /* Auto generated password lenght */

@@ -32,16 +32,16 @@ function PageFooter() {
     <Footer>
       <Row>
         <Col sm={12} xs={24}>
-          {'ETH Hot Wallet - '}
+          {'BTC Hot Wallet - '}
           <a href={github} target="_blank" rel="noopener noreferrer">
-            Ethereum Wallet with ERC20 support (GitHub)
+            Bitcoin web wallet (GitHub)
           </a><br />
-          Created using: viem, React.js, Ant design...
+          Created using: @scure/btc-signer, React, Ant Design...
         </Col>
 
         <GreyCol sm={12} xs={24}>
           <a href="https://medium.freecodecamp.org/how-to-build-an-ethereum-wallet-web-app-ac77dcaac573" target="_blank" rel="noopener noreferrer">
-          How to build an Ethereum Wallet guide
+          How the Ethereum version was built (guide)
           </a><br />
           {sha ? (
             <>

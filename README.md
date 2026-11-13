@@ -1,40 +1,30 @@
-# ETH Hot Wallet
+# BTC Hot Wallet
 
-An embeddable web wallet for Ethereum, Base, Arbitrum and Optimism with ERC-20 support. Keys are generated, stored and used for signing inside the page, so it needs no external signer such as MetaMask.
+A Bitcoin web wallet. Keys are generated, stored and used for signing inside the page, so it needs no extension or external signer.
 
-Live: [eth.hot-wallet.org](https://eth.hot-wallet.org)
-
-[![ETH Hot Wallet with ERC-20 tokens and the network menu open](docs/images/eth-hot-wallet-networks.png)](https://eth.hot-wallet.org)
-
-Background: [How to build an Ethereum Wallet web app](https://medium.freecodecamp.org/how-to-build-an-ethereum-wallet-web-app-ac77dcaac573) (Medium).
+Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) ([how that was built](https://medium.freecodecamp.org/how-to-build-an-ethereum-wallet-web-app-ac77dcaac573), Medium).
 
 ## Features
 
-- BIP-39 seed and HD addresses on the standard path (`m/44'/60'/0'/0/n`), so the seed also works in other wallets
+- BIP-39 seed (12 words; 24 also accepted on restore) and native SegWit addresses on the BIP-84 path (`m/84'/0'/0'/0/n`, test networks `m/84'/1'/0'/0/n`), so the seed also works in other wallets such as Sparrow
 - The seed is stored in the browser, encrypted with your password (PBKDF2 + AES-GCM)
-- Transactions are signed in the page; no wallet extension needed
-- ETH and ERC-20 tokens look and work the same
-- EIP-1559 fees and gas limits are estimated automatically
+- Transactions are built and signed in the page; you check the amount, both addresses and the fee before sending
+- Fee: slow, normal or fast; transactions signal replace-by-fee
+- Change goes back to the sending address; coins of 546 sats or less are never spent (they may carry inscriptions)
+- Restoring a seed finds the addresses it used before
+- Balances include unconfirmed transactions, with a note
 - Locks itself 15 minutes after unlocking
-- Content Security Policy: the page runs only its own scripts and connects only to its RPC nodes and CoinGecko
-- Network selector: Ethereum Mainnet, Base, Arbitrum One, Optimism, Sepolia, local node or offline
-- Balances converted to USD, EUR and BTC
+- Content Security Policy: the page runs only its own scripts and connects only to its APIs and CoinGecko
+- Networks: Mainnet, Testnet4, Signet or offline
+- Balances converted to USD and EUR
 - Responsive layout for mobile
 
 ## Networks and APIs
 
-- [PublicNode](https://ethereum-rpc.publicnode.com) keyless JSON-RPC endpoints for every network by default
+- Public [Esplora](https://github.com/Blockstream/esplora/blob/master/API.md) APIs, no key and no server of our own: [mempool.space](https://mempool.space/docs/api/rest), with blockstream.info as fallback when it fails, limits requests or doesn't answer within 15 seconds
 - [CoinGecko](https://www.coingecko.com/) for exchange rates
 
-To use your own RPC provider (e.g. Infura or Alchemy), set it when starting or building:
-
-```bash
-MAINNET_RPC_URL=https://mainnet.infura.io/v3/<project-id> SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/<project-id> npm start
-```
-
-`BASE_RPC_URL`, `ARBITRUM_RPC_URL` and `OPTIMISM_RPC_URL` work the same way.
-
-The wallet checks that each endpoint serves the expected chain ID and signs transactions with it (EIP-155).
+The wallet checks that each API serves the chosen network (its genesis block hash), and checks each coin's amount against its funding transaction before signing. The API operators see your IP address and every address the wallet looks up.
 
 ## Development
 
@@ -48,17 +38,16 @@ Requires Node.js 20.19+ or 22.12+.
 | `npm test` | Run the tests (Vitest) |
 | `npm run lint` | Lint (ESLint) |
 
-Built with [viem](https://viem.sh) (keys, signing, JSON-RPC), [react-boilerplate](https://github.com/react-boilerplate/react-boilerplate) (React, Redux, Redux-Saga, Reselect), [Ant Design](https://github.com/ant-design/ant-design) and [Vite](https://vite.dev).
+Built with [@scure/btc-signer](https://github.com/paulmillr/scure-btc-signer) (addresses, transactions, signing, Esplora client), [@scure/bip32 and bip39](https://github.com/paulmillr/scure-bip32), [react-boilerplate](https://github.com/react-boilerplate/react-boilerplate) (React, Redux, Redux-Saga, Reselect), [Ant Design](https://github.com/ant-design/ant-design) and [Vite](https://vite.dev).
 
 ### Code layout
 
-- `app/utils/wallet.js`: seed encryption and key derivation
+- `app/utils/bitcoin.js`: addresses, keys, building and signing transactions
+- `app/utils/esplora.js`: network access (balances, coins, fee rates, broadcast) with API failover
+- `app/utils/wallet.js`: seed encryption and the stored addresses
 - `app/containers/HomePage`: wallet actions (create, restore, unlock, add address, save and load)
-- `app/containers/Header`: all network communication (RPC, balances, sending, exchange rates) in `saga.js`
+- `app/containers/Header`: all network communication (connect, restore scan, balances, sending, exchange rates) in `saga.js`; the networks in `network.js`
 - `app/containers/SendToken`: state of the send dialog; checks and sending happen in Header
-- `app/containers/TokenChooser`: pick ERC-20 tokens from `tokens.tokenlist.json` ([tokenlists.org](https://tokenlists.org) format)
-
-[![ERC-20 token chooser](docs/images/eth-hot-wallet-erc20-tokenChooser.jpg)](https://eth.hot-wallet.org)
 
 ## License
 
