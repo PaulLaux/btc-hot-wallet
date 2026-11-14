@@ -40,9 +40,6 @@ function PageFooter() {
         </Col>
 
         <GreyCol sm={12} xs={24}>
-          <a href="https://medium.freecodecamp.org/how-to-build-an-ethereum-wallet-web-app-ac77dcaac573" target="_blank" rel="noopener noreferrer">
-          How the Ethereum version was built (guide)
-          </a><br />
           {sha ? (
             <>
               {'Build '}
