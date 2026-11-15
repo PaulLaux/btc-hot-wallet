@@ -74,12 +74,14 @@ import Network from './network';
 let net = null;
 // networks checked for used addresses in this session
 const scanned = new Set();
-const isUsed = async (address) => (await net.addressInfo(address)).used;
+const usedAddresses = (addresses) => net.usedAddresses(addresses);
+// unused addresses in a row after the last used one that end the restore scan: the gap limit of BIP-44, as in Ledger Live
+const GAP = 20;
 
 /**
- * After a restore, find the addresses the wallet used before: check addresses 0-9, then one more while the
- * last checked one was ever used. One request at a time: public APIs limit bursts. Runs while the wallet is
- * unlocked (deriving addresses needs the seed), once per network per session.
+ * After a restore, find the addresses the wallet used before: check them in blocks, one request each where the
+ * API allows (utils/esplora.js usedAddresses), until GAP unused addresses follow the last used one. Runs while
+ * the wallet is unlocked (deriving addresses needs the seed), once per network per session.
  * @return {object|null} the keystore with the addresses up to the last used one, or null if it has them all
  */
 export function* findUsedAddresses(networkName, chain, keystore) {
@@ -87,11 +89,15 @@ export function* findUsedAddresses(networkName, chain, keystore) {
   if (!password || scanned.has(networkName)) return null;
   try {
     const mnemonic = yield call(openVault, keystore, password);
-    const addresses = deriveAddresses(mnemonic, chain, 0, 10);
+    const addresses = [];
     let count = 0; // the addresses up to the last used one
-    for (let i = 0; i < 10 || i === count; i += 1) {
-      if (i === addresses.length) addresses.push(...deriveAddresses(mnemonic, chain, i, 1));
-      if (yield call(isUsed, addresses[i])) count = i + 1;
+    while (addresses.length < count + GAP) {
+      const block = deriveAddresses(mnemonic, chain, addresses.length, count + GAP - addresses.length);
+      const used = yield call(usedAddresses, block);
+      for (const address of block) {
+        addresses.push(address);
+        if (used.has(address)) count = addresses.length;
+      }
     }
     scanned.add(networkName);
     if (count <= keystore.addresses[chain].length) return null;

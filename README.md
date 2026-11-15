@@ -11,7 +11,7 @@ Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) 
 - Transactions are built and signed in the page; you check the amount, both addresses and the fee before sending
 - Fee: slow, normal or fast; transactions signal replace-by-fee
 - Change goes back to the sending address, or to the fee when it is too small for nodes to relay (546 sats, 5460 on Litecoin); coins of 546 sats or less are never spent (they may carry inscriptions)
-- Restoring a seed finds the addresses it used before
+- Restoring a seed finds the addresses it used before: it checks until 20 unused addresses follow the last used one (the BIP-44 gap limit, as in Ledger Live), 20 addresses per request where the API allows
 - Balances count confirmed transactions only; unconfirmed ones show as a note below
 - Locks itself 15 minutes after unlocking
 - Content Security Policy: the page runs only its own scripts and connects only to its APIs and CoinGecko
@@ -21,7 +21,8 @@ Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) 
 
 ## Networks and APIs
 
-- Public [Esplora](https://github.com/Blockstream/esplora/blob/master/API.md) APIs, no key and no server of our own: [mempool.space](https://mempool.space/docs/api/rest), with blockstream.info as fallback when it fails, limits requests or doesn't answer within 15 seconds
+- Public [Esplora](https://github.com/Blockstream/esplora/blob/master/API.md) APIs, no key and no server of our own: [mempool.space](https://mempool.space/docs/api/rest), with blockstream.info as fallback when it fails, limits requests or doesn't answer within 15 seconds; later requests stay on the API that answered
+- The restore scan asks for 20 addresses at once with `POST /api/addresses/txs` (mempool.space and litecoinspace.org; not in their API docs). If that fails, it checks one address at a time
 - Litecoin: [litecoinspace.org](https://litecoinspace.org), a mempool.space fork (no fallback)
 - [CoinGecko](https://www.coingecko.com/) for exchange rates
 

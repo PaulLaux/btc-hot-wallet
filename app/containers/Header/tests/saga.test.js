@@ -88,39 +88,43 @@ describe('on Testnet4', () => {
 });
 
 describe('findUsedAddresses', () => {
-  const addresses = deriveAddresses(mnemonic, 'test', 0, 12);
-  // feeds the password and mnemonic, then whether each checked address was used; returns the result
+  const addresses = deriveAddresses(mnemonic, 'test', 0, 60);
+  // feeds the password and mnemonic, then the used ones (by index) of each block checked;
+  // returns the result and the size of each block
   const scan = (networkName, password, used = []) => {
     const gen = findUsedAddresses(networkName, 'test', keystore);
     gen.next();
     let step = gen.next(password);
-    if (step.done) return step.value; // locked, or this network was checked already
+    if (step.done) return { result: step.value }; // locked, or this network was checked already
     step = gen.next(mnemonic);
-    used.forEach((isUsed, i) => {
-      expect(step.value.payload.args[0]).toBe(addresses[i]); // checks the addresses in order
-      step = gen.next(isUsed);
-    });
-    expect(step.done).toBe(true);
-    return step.value;
+    const blocks = [];
+    for (let from = 0; !step.done; from += blocks.at(-1)) {
+      const block = step.value.payload.args[0];
+      expect(block).toEqual(addresses.slice(from, from + block.length)); // the next addresses, in order
+      blocks.push(block.length);
+      step = gen.next(new Set(used.map((i) => addresses[i])));
+    }
+    return { result: step.value, blocks };
   };
-  const unused = Array(10).fill(false);
 
   it('does nothing while the wallet is locked', () => {
-    expect(scan('Signet', false)).toBe(null);
+    expect(scan('Signet', false).result).toBe(null);
   });
 
-  it('adds the addresses up to the last used one of the first ten', () => {
-    expect(scan('Signet', 'password', [false, false, true, ...Array(7).fill(false)]).addresses)
-      .toEqual({ main: keystore.addresses.main, test: addresses.slice(0, 3) });
+  it('checks 20 addresses in one block, and keeps the addresses when none was used', () => {
+    expect(scan('Testnet4', 'password')).toEqual({ result: null, blocks: [20] });
   });
 
-  it('continues one at a time while the last checked address was used, once per network', () => {
-    const used = [...Array(9).fill(false), true, true, false];
-    expect(scan('Bitcoin', 'password', used).addresses.test).toEqual(addresses.slice(0, 11));
-    expect(scan('Bitcoin', 'password')).toBe(null); // already checked in this session
+  it('adds the addresses up to the last used one, checking until 20 unused ones follow it', () => {
+    const { result, blocks } = scan('Signet', 'password', [2]);
+    expect(result.addresses).toEqual({ main: keystore.addresses.main, test: addresses.slice(0, 3) });
+    expect(blocks).toEqual([20, 3]);
   });
 
-  it('keeps the addresses when none beyond them was used', () => {
-    expect(scan('Testnet4', 'password', unused)).toBe(null);
+  it('continues past gaps shorter than 20, once per network', () => {
+    const { result, blocks } = scan('Bitcoin', 'password', [0, 19, 38]);
+    expect(result.addresses.test).toEqual(addresses.slice(0, 39));
+    expect(blocks).toEqual([20, 20, 19]);
+    expect(scan('Bitcoin', 'password').result).toBe(null); // already checked in this session
   });
 });

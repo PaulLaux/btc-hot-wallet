@@ -28,9 +28,20 @@ describe('failoverFetch', () => {
   it('tries the next API on a network error, 429 or 5xx', async () => {
     for (const failure of [[new TypeError('Failed to fetch')], [429, 'Too Many Requests'], [503, 'Unavailable']]) {
       const calls = stubFetch({ [`GET ${url}`]: failure, [b]: [200, '100'] });
-      expect(await (await get(url)).text()).toBe('100');
+      expect(await (await failoverFetch(apis)(url)).text()).toBe('100');
       expect(calls).toEqual([`GET ${url}`, b]);
     }
+  });
+
+  it('starts later requests at the API that answered last, and goes back when that one fails', async () => {
+    const sticky = failoverFetch(apis);
+    let calls = stubFetch({ [`GET ${url}`]: [503, ''], [b]: [200, '100'] });
+    await sticky(url);
+    await sticky(url);
+    expect(calls).toEqual([`GET ${url}`, b, b]);
+    calls = stubFetch({ [`GET ${url}`]: [200, '101'], [b]: [503, ''] });
+    expect(await (await sticky(url)).text()).toBe('101');
+    expect(calls).toEqual([b, `GET ${url}`]);
   });
 
   it('tries the next API when one does not answer in time', async () => {
@@ -67,6 +78,42 @@ describe('connect', () => {
     expect(await connect(testnet4).addressInfo(address)).toEqual({ balance: '100000', unconfirmed: '-80000', used: true });
     stubFetch({ [api(`/address/${address}`)]: [200, { chain_stats: stats(0, 0, 0), mempool_stats: stats(0, 0, 0) }] });
     expect(await connect(testnet4).addressInfo(address)).toEqual({ balance: '0', unconfirmed: '0', used: false });
+  });
+
+  describe('usedAddresses', () => {
+    const [a0, a1, a2, a3] = ['tb1qa0', 'tb1qa1', 'tb1qa2', 'tb1qa3'];
+    const tx = (from, to) => ({ vin: [{ prevout: from && { scriptpubkey_address: from } }], vout: [{ scriptpubkey_address: to }] });
+
+    it('asks the first API for all addresses at once, again for those not seen yet', async () => {
+      // like the 50 transaction limit: answers only the transactions of the first used address asked
+      const txsOf = { [a1]: [tx(null, a1), tx(a1, 'tb1qother')], [a3]: [tx('tb1qother', a3)] };
+      const asked = [];
+      vi.stubGlobal('fetch', async (url, { method, body }) => {
+        expect(`${method} ${url}`).toBe(`POST ${apis[0]}/addresses/txs`);
+        expect(typeof body).toBe('string'); // sent as text/plain: no CORS preflight
+        asked.push(JSON.parse(body));
+        return Response.json(txsOf[asked.at(-1).find((a) => txsOf[a])] || []);
+      });
+      expect(await connect(testnet4).usedAddresses([a0, a1, a2, a3])).toEqual(new Set([a1, a3]));
+      expect(asked).toEqual([[a0, a1, a2, a3], [a0, a2, a3], [a0, a2]]);
+    });
+
+    it('checks one address at a time, staying on the next API after a failure, once the batch fails', async () => {
+      const info = (txs) => [200, { chain_stats: { tx_count: txs }, mempool_stats: { tx_count: 0 } }];
+      const calls = stubFetch({
+        [api(`/address/${a0}`)]: info(0),
+        [api(`/address/${a1}`)]: [429, 'Too Many Requests'],
+        [`GET ${apis[1]}/address/${a1}`]: info(2),
+        [`GET ${apis[1]}/address/${a2}`]: info(1),
+      });
+      const net = connect(testnet4);
+      expect(await net.usedAddresses([a0, a1, a2])).toEqual(new Set([a1, a2]));
+      expect(calls).toEqual([`POST ${apis[0]}/addresses/txs`, api(`/address/${a0}`), api(`/address/${a1}`),
+        `GET ${apis[1]}/address/${a1}`, `GET ${apis[1]}/address/${a2}`]);
+      calls.length = 0;
+      await net.usedAddresses([a2]);
+      expect(calls).toEqual([`GET ${apis[1]}/address/${a2}`]); // no batch request again on this connection
+    });
   });
 
   it('returns coins with their funding transaction, and refuses one that does not match its id', async () => {
