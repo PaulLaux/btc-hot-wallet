@@ -1,6 +1,6 @@
 import createStore from '../store';
 import { generateKeystoreSuccess, generateAddressSuccess, changeBalance, setAddresses, setExchangeRates } from 'containers/HomePage/actions';
-import { makeSelectAddressMap, makeSelectChain, makeSelectCoin, makeSelectExchangeRates } from 'containers/HomePage/selectors';
+import { makeSelectAddressMap, makeSelectChain, makeSelectCoin, makeSelectExchangeRates, makeSelectUnusedAtEnd } from 'containers/HomePage/selectors';
 
 const keystore = {
   addresses: { main: ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu'], test: ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl'] },
@@ -52,6 +52,21 @@ describe('store', () => {
     store.dispatch(changeBalance(changeAddress, '0', '0'));
     store.dispatch(changeBalance(address, '0', '0')); // an empty receive address stays
     expect(Object.keys(map())).toEqual([address, 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97']);
+  });
+
+  it('counts the receive addresses after the last used one', () => {
+    const store = createStore();
+    const unused = () => makeSelectUnusedAtEnd()(store.getState());
+    const added = 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97';
+    store.dispatch(generateKeystoreSuccess({ ...keystore, change: { ...keystore.change, test: [changeAddress] } }, 'test'));
+    expect(unused()).toBe(1); // not checked yet
+    store.dispatch(changeBalance(changeAddress, '1000', '0', true)); // change addresses don't count
+    store.dispatch(generateAddressSuccess(keystore, added));
+    expect(unused()).toBe(2);
+    store.dispatch(changeBalance(address, '0', '0', true)); // used, now empty
+    expect(unused()).toBe(1);
+    store.dispatch(changeBalance(added, '1000', '0', true));
+    expect(unused()).toBe(0);
   });
 
   it('checks that state stays serializable: balances are strings, not bigint', () => {

@@ -75,7 +75,7 @@ const initialState = {
 
   keystore: false,
   chain: false, // the addresses shown are of this chain: a key of chains in utils/bitcoin.js
-  addressList: false, // { address1: { balance: satsString / false, unconfirmed: satsString, change: true / absent }, ... }
+  addressList: false, // { address1: { balance: satsString / false, unconfirmed: satsString, used: boolean, change: true / absent }, ... }
 
   exchangeRates: {}, // price of each coin: { BTC: { usd: 94000.5, eur: 81000.25 }, ... }
   convertTo: 'usd', // currency shown under the balances, or 'none'
@@ -146,7 +146,7 @@ export default createReducer(initialState, (builder) => builder
     if (!row) return;
     // an empty change address stays empty (wallets never reuse them): no longer shown, nor checked
     if (row.change && a.balance === '0' && a.unconfirmed === '0') delete s.addressList[a.address];
-    else Object.assign(row, { balance: a.balance, unconfirmed: a.unconfirmed });
+    else Object.assign(row, { balance: a.balance, unconfirmed: a.unconfirmed, used: a.used });
   })
 
   .addCase(SHOW_SEND_TOKEN, (s) => { s.isShowSendToken = true; })

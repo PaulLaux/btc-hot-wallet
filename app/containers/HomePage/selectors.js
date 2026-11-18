@@ -85,10 +85,19 @@ const makeSelectChain = () => createSelector(
   (homeState) => homeState.chain
 );
 
-/** { address1: { balance: satsString / false, unconfirmed: satsString, change: true / absent }, ... } */
+/** { address1: { balance: satsString / false, unconfirmed: satsString, used: boolean, change: true / absent }, ... } */
 const makeSelectAddressMap = () => createSelector(
   selectHome,
   (homeState) => homeState.addressList
+);
+
+/** The number of receive addresses after the last used one; an address not checked yet counts as unused */
+const makeSelectUnusedAtEnd = () => createSelector(
+  selectHome,
+  ({ addressList }) => {
+    const receive = Object.values(addressList || {}).filter((row) => !row.change);
+    return receive.length - 1 - receive.findLastIndex((row) => row.used);
+  }
 );
 
 
@@ -160,6 +169,7 @@ export {
   makeSelectAddressListMsg,
   makeSelectChain,
   makeSelectAddressMap,
+  makeSelectUnusedAtEnd,
 
   makeSelectExchangeRates,
   makeSelectCoin,

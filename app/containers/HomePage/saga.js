@@ -24,6 +24,7 @@ import {
   makeSelectUserPassword,
   makeSelectKeystore,
   makeSelectChain,
+  makeSelectUnusedAtEnd,
 } from 'containers/HomePage/selectors';
 
 import { loadNetwork } from 'containers/Header/actions';
@@ -40,7 +41,7 @@ import { generatedPasswordLength, offlineModeString, defaultNetwork, localStorag
 
 import { timer } from 'utils/common';
 
-import { checkBalance } from 'containers/Header/saga';
+import { checkBalance, GAP } from 'containers/Header/saga';
 
 import {
   generateWalletSucces,
@@ -133,7 +134,8 @@ export function* genKeystore({ passphrase }) {
 
 /**
  * Generate new address from same key
- * will run after GENERATE_ADDRESS action
+ * will run after GENERATE_ADDRESS action. Stops at GAP unused addresses after the last used one (the BIP-44
+ * gap limit): a restore from the seed, here or in another wallet, would not find the next one
  */
 export function* generateAddress() {
   try {
@@ -145,6 +147,10 @@ export function* generateAddress() {
     const password = yield select(makeSelectPassword());
     if (!password) {
       throw new Error('Wallet Locked');
+    }
+
+    if ((yield select(makeSelectUnusedAtEnd())) >= GAP) {
+      throw new Error(`${GAP} unused addresses: receive on one of them first, or a restore from the seed would not find the next one`);
     }
 
     const chain = yield select(makeSelectChain());

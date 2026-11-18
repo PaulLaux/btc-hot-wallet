@@ -76,7 +76,7 @@ let net = null;
 const scanned = new Set();
 const usedAddresses = (addresses) => net.usedAddresses(addresses);
 // unused addresses in a row after the last used one that end the restore scan: the gap limit of BIP-44, as in Ledger Live
-const GAP = 20;
+export const GAP = 20;
 const longer = (a, b) => (a.length > b.length ? a : b);
 
 /**
@@ -243,8 +243,8 @@ export function* SendTransaction() {
 /* *************  Polling saga and polling flow for check balances ***************** */
 // Balances are kept as decimal strings (sats): Redux state must be serializable
 export function* checkBalance(address) {
-  const { balance, unconfirmed } = yield call([net, net.addressInfo], address);
-  yield put(changeBalance(address, balance, unconfirmed));
+  const { balance, unconfirmed, used } = yield call([net, net.addressInfo], address);
+  yield put(changeBalance(address, balance, unconfirmed, used));
 }
 
 export function* checkAllBalances() {

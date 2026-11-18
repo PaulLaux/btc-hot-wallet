@@ -275,15 +275,17 @@ export function generateKeystoreError(error) {
  * @param  {string} address as string
  * @param  {string} balance confirmed, in sats, as a decimal string
  * @param  {string} unconfirmed the change not in a block yet, in sats: negative for pending sends
+ * @param  {boolean} used whether the address was ever used
  *
  * @return {object} An action object with a type of CHANGE_BALANCE with address and balances
  */
-export function changeBalance(address, balance, unconfirmed) {
+export function changeBalance(address, balance, unconfirmed, used) {
   return {
     type: CHANGE_BALANCE,
     address,
     balance,
     unconfirmed,
+    used,
   };
 }
 
