@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Modal, Button, Input, Tooltip, Checkbox } from 'antd';
 import { CloseCircleOutlined, KeyOutlined, LockOutlined, WalletOutlined } from '@ant-design/icons';
+import SeedPaths from 'components/SeedPaths';
 
 const Div = styled.div`
   margin-top: 12px;
@@ -50,7 +51,7 @@ function RestoreWalletModal(props) {
         </Button >,
       ]}
     >
-      <Description>{"12 or 24 words. Addresses: BIP-84 m/84'/0'/0'/0, Litecoin m/84'/2'/0'/0, test networks m/84'/1'/0'/0"}</Description>
+      <Description>12 or 24 words, from this wallet, Ledger Live or Sparrow <SeedPaths /></Description>
       <Input
         placeholder="Enter seed"
         prefix={<WalletOutlined />}
