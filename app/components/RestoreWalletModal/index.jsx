@@ -4,10 +4,10 @@
 *
 */
 
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Modal, Button, Input, Tooltip } from 'antd';
-import { CloseCircleOutlined, KeyOutlined, WalletOutlined } from '@ant-design/icons';
+import { Modal, Button, Input, Tooltip, Checkbox } from 'antd';
+import { CloseCircleOutlined, KeyOutlined, LockOutlined, WalletOutlined } from '@ant-design/icons';
 
 const Div = styled.div`
   margin-top: 12px;
@@ -26,6 +26,9 @@ const Description = styled.div`
 
 function RestoreWalletModal(props) {
   const { isShowRestoreWallet, userSeed, userPassword, restoreWalletError, onChangeUserSeed, onChangeUserPassword, onRestoreWalletCancel, onRestoreWalletFromSeed } = props;
+  // BIP-39 passphrase (as set on a Ledger): kept here only, until the modal closes. Not trimmed: spaces count
+  const [usePassphrase, setUsePassphrase] = useState(false);
+  const [passphrase, setPassphrase] = useState('');
   const errorComponent =
     (<Span key="error">
       <Tooltip placement="bottom" title={restoreWalletError}>
@@ -39,9 +42,10 @@ function RestoreWalletModal(props) {
       title="Restore Wallet"
       onOk={onRestoreWalletCancel}
       onCancel={onRestoreWalletCancel}
+      afterClose={() => { setUsePassphrase(false); setPassphrase(''); }}
       footer={[
         restoreWalletError ? errorComponent : null,
-        <Button key="submit" type="primary" size="large" onClick={onRestoreWalletFromSeed} >
+        <Button key="submit" type="primary" size="large" onClick={() => onRestoreWalletFromSeed(usePassphrase ? passphrase : '')} >
           Restore
         </Button >,
       ]}
@@ -69,6 +73,22 @@ function RestoreWalletModal(props) {
           spellCheck={false}
         />
       </Div>
+      <Div>
+        <Checkbox checked={usePassphrase} onChange={(evt) => setUsePassphrase(evt.target.checked)}>
+          Use a passphrase (&quot;25th word&quot;)
+        </Checkbox>
+      </Div>
+      {usePassphrase && (
+        <Div>
+          <Input.Password
+            placeholder="Enter passphrase exactly: spaces and case count"
+            prefix={<LockOutlined />}
+            value={passphrase}
+            onChange={(evt) => setPassphrase(evt.target.value)}
+            autoComplete="off"
+          />
+        </Div>
+      )}
     </Modal>
   );
 }

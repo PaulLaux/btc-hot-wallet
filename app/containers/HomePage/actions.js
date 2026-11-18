@@ -176,12 +176,14 @@ export function changeUserPassword(userPassword) {
 /**
  * Try to restore wallet from seed provided by user.
  *
+ * @param  {string} passphrase BIP-39 passphrase, '' for none
  * @return {object}    An action object with a type of RESTORE_WALLET_FROM_SEED
  *
  */
-export function restoreWalletFromSeed() {
+export function restoreWalletFromSeed(passphrase = '') {
   return {
     type: RESTORE_WALLET_FROM_SEED,
+    passphrase,
   };
 }
 
@@ -216,11 +218,13 @@ export function restoreWalletFromSeedError(error) {
 /**
  * Confirm seed and create new keystore
  *
+ * @param  {string} passphrase BIP-39 passphrase of a restored seed, '' for none
  * @return {object}    An action object with a type of GENERATE_KEYSTORE
  */
-export function generateKeystore() {
+export function generateKeystore(passphrase = '') {
   return {
     type: GENERATE_KEYSTORE,
+    passphrase,
   };
 }
 

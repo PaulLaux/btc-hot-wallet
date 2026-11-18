@@ -4,7 +4,6 @@
  */
 import * as btc from '@scure/btc-signer';
 import { HDKey } from '@scure/bip32';
-import { mnemonicToSeedSync } from '@scure/bip39';
 import { hex } from '@scure/base';
 
 // Litecoin address formats; P2SH is M… (Q… on testnet): the older 3… (2…) form is not accepted
@@ -26,17 +25,17 @@ export const chains = {
 const RBF = 0xfffffffd; // signals replace-by-fee: a stuck transaction can be resent with a higher fee
 const DUST = 546n; // coins this small may carry an inscription: never spend them
 
-const receiveKeys = (mnemonic, chain) =>
-  HDKey.fromMasterSeed(mnemonicToSeedSync(mnemonic)).derive(`m/84'/${chains[chain].coinType}'/0'/0`);
+// `seed`: the BIP-39 seed (64 bytes) of the mnemonic and passphrase, from utils/wallet.js openVault
+const receiveKeys = (seed, chain) => HDKey.fromMasterSeed(seed).derive(`m/84'/${chains[chain].coinType}'/0'/0`);
 
 /** `count` receive addresses, from index `from` */
-export function deriveAddresses(mnemonic, chain, from, count) {
-  const keys = receiveKeys(mnemonic, chain);
+export function deriveAddresses(seed, chain, from, count) {
+  const keys = receiveKeys(seed, chain);
   return Array.from({ length: count }, (_, i) => btc.p2wpkh(keys.deriveChild(from + i).publicKey, chains[chain].network).address);
 }
 
 /** Private key of receive address `index` */
-export const privateKey = (mnemonic, chain, index) => receiveKeys(mnemonic, chain).deriveChild(index).privateKey;
+export const privateKey = (seed, chain, index) => receiveKeys(seed, chain).deriveChild(index).privateKey;
 
 /** Throws unless `address` is valid on this chain; any type (on Bitcoin 1…, 3…, bc1q…, bc1p…) */
 export function checkAddress(address, chain) {

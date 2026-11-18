@@ -81,18 +81,19 @@ const GAP = 20;
 /**
  * After a restore, find the addresses the wallet used before: check them in blocks, one request each where the
  * API allows (utils/esplora.js usedAddresses), until GAP unused addresses follow the last used one. Runs while
- * the wallet is unlocked (deriving addresses needs the seed), once per network per session.
+ * the wallet is unlocked (deriving addresses needs the seed), once per network per session. A mistyped passphrase
+ * opens a valid but empty wallet: warns when a wallet with a passphrase has no used address on a main network.
  * @return {object|null} the keystore with the addresses up to the last used one, or null if it has them all
  */
 export function* findUsedAddresses(networkName, chain, keystore) {
   const password = yield select(makeSelectPassword());
   if (!password || scanned.has(networkName)) return null;
   try {
-    const mnemonic = yield call(openVault, keystore, password);
+    const seed = yield call(openVault, keystore, password);
     const addresses = [];
     let count = 0; // the addresses up to the last used one
     while (addresses.length < count + GAP) {
-      const block = deriveAddresses(mnemonic, chain, addresses.length, count + GAP - addresses.length);
+      const block = deriveAddresses(seed, chain, addresses.length, count + GAP - addresses.length);
       const used = yield call(usedAddresses, block);
       for (const address of block) {
         addresses.push(address);
@@ -100,6 +101,9 @@ export function* findUsedAddresses(networkName, chain, keystore) {
       }
     }
     scanned.add(networkName);
+    if (!count && keystore.hasPassphrase && chains[chain].coinType !== 1) { // coin type 1: test networks
+      message.warning(`No used address on ${networkName}: if this wallet has coins there, check the passphrase`, 15);
+    }
     if (count <= keystore.addresses[chain].length) return null;
     return { ...keystore, addresses: { ...keystore.addresses, [chain]: addresses.slice(0, count) } };
   } catch (err) {

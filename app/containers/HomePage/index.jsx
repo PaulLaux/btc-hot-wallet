@@ -277,9 +277,8 @@ export function mapDispatchToProps(dispatch) {
       // console.log(evt.target);
       dispatch(changeUserPassword(evt.target.value));
     },
-    onRestoreWalletFromSeed: (evt) => {
-      if (evt !== undefined && evt.preventDefault) evt.preventDefault();
-      dispatch(restoreWalletFromSeed());
+    onRestoreWalletFromSeed: (passphrase) => {
+      dispatch(restoreWalletFromSeed(passphrase));
     },
     onCheckBalances: (evt) => {
       if (evt !== undefined && evt.preventDefault) evt.preventDefault();

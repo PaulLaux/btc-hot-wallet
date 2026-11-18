@@ -81,9 +81,9 @@ export function* generateWallet() {
 
 
 /**
- * check seed given by user
+ * check seed given by user; the passphrase (BIP-39, '' for none) goes on to the keystore
  */
-export function* restoreFromSeed() {
+export function* restoreFromSeed({ passphrase }) {
   try {
     const userPassword = yield select(makeSelectUserPassword());
     let userSeed = yield select(makeSelectUserSeed());
@@ -103,7 +103,7 @@ export function* restoreFromSeed() {
     }
 
     yield put(restoreWalletFromSeedSuccess(userSeed, userPassword));
-    yield put(generateKeystore());
+    yield put(generateKeystore(passphrase));
   } catch (err) {
     yield put(restoreWalletFromSeedError(err.message));
   }
@@ -112,14 +112,14 @@ export function* restoreFromSeed() {
 /**
  * Create new keystore with the first address
  */
-export function* genKeystore() {
+export function* genKeystore({ passphrase }) {
   try {
     const password = yield select(makeSelectPassword());
     const seedPhrase = yield select(makeSelectSeed());
     // allow time to render components before cpu intensive tasks:
     yield call(timer, 300);
 
-    const ks = yield call(createVault, seedPhrase, password);
+    const ks = yield call(createVault, seedPhrase, password, passphrase);
 
     yield put(generateKeystoreSuccess(ks, Network[defaultNetwork].chain));
     yield put(loadNetwork(defaultNetwork));

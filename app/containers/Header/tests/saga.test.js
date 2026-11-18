@@ -1,6 +1,8 @@
 import { put } from 'redux-saga/effects';
 import * as btc from '@scure/btc-signer';
 import { hex } from '@scure/base';
+import { mnemonicToSeedSync } from '@scure/bip39';
+import { message } from 'antd';
 import { loadNetwork, findUsedAddresses, confirmSendTransaction, SendTransaction } from '../saga';
 import { confirmSendTransactionError, sendTransactionSuccess, sendTransactionError } from 'containers/SendToken/actions';
 import { COMFIRM_SEND_TRANSACTION_SUCCESS } from 'containers/SendToken/constants';
@@ -9,10 +11,10 @@ import { buildTx, deriveAddresses } from 'utils/bitcoin';
 import { coinsOf } from 'utils/tests/coins';
 
 // action creators show antd messages, which need a DOM
-vi.mock('antd', () => ({ message: { success: () => {}, error: () => {}, warning: () => {} } }));
+vi.mock('antd', () => ({ message: { success: () => {}, error: () => {}, warning: vi.fn() } }));
 
-const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
-// the first two testnet addresses of the mnemonic; only the first is in the wallet
+const seed = mnemonicToSeedSync('abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about');
+// the first two testnet addresses of the seed; only the first is in the wallet
 const [from, to] = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97'];
 const keystore = { addresses: { main: ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu'], test: [from] } };
 const coins = coinsOf(from, [100000n, 546n, 30000n]);
@@ -72,8 +74,8 @@ describe('on Testnet4', () => {
   it('signs exactly the confirmed transaction and broadcasts it', () => {
     const { psbt } = buildTx(coins, from, to, 120000n, 2n, 'test');
     const gen = SendTransaction();
-    // keystore, from, password, psbt, network name, mnemonic
-    const broadcast = run(gen, keystore, from, 'password', psbt, 'Testnet4', mnemonic);
+    // keystore, from, password, psbt, network name, seed
+    const broadcast = run(gen, keystore, from, 'password', psbt, 'Testnet4', seed);
     const tx = btc.Transaction.fromRaw(hex.decode(broadcast.payload.args[0]));
     const unsigned = btc.Transaction.fromPSBT(hex.decode(psbt));
     expect(tx.unsignedTx).toEqual(unsigned.unsignedTx);
@@ -82,21 +84,21 @@ describe('on Testnet4', () => {
 
   it('signs only for addresses of the wallet', () => {
     const { psbt } = buildTx(coinsOf(to, [100000n]), to, from, 50000n, 2n, 'test');
-    expect(run(SendTransaction(), keystore, to, 'password', psbt, 'Testnet4', mnemonic))
+    expect(run(SendTransaction(), keystore, to, 'password', psbt, 'Testnet4', seed))
       .toEqual(put(sendTransactionError(`Address ${to} is not in this wallet`)));
   });
 });
 
 describe('findUsedAddresses', () => {
-  const addresses = deriveAddresses(mnemonic, 'test', 0, 60);
-  // feeds the password and mnemonic, then the used ones (by index) of each block checked;
+  const addresses = deriveAddresses(seed, 'test', 0, 60);
+  // feeds the password and seed, then the used ones (by index) of each block checked;
   // returns the result and the size of each block
   const scan = (networkName, password, used = []) => {
     const gen = findUsedAddresses(networkName, 'test', keystore);
     gen.next();
     let step = gen.next(password);
     if (step.done) return { result: step.value }; // locked, or this network was checked already
-    step = gen.next(mnemonic);
+    step = gen.next(seed);
     const blocks = [];
     for (let from = 0; !step.done; from += blocks.at(-1)) {
       const block = step.value.payload.args[0];
@@ -126,5 +128,18 @@ describe('findUsedAddresses', () => {
     expect(result.addresses.test).toEqual(addresses.slice(0, 39));
     expect(blocks).toEqual([20, 20, 19]);
     expect(scan('Bitcoin', 'password').result).toBe(null); // already checked in this session
+  });
+
+  it('warns when a wallet with a passphrase has no used address on a main network', () => {
+    // the texts of the warnings of a scan that finds no used address (network names: once per session)
+    const warnings = (networkName, chain, hasPassphrase) => {
+      message.warning.mockClear();
+      const ks = { addresses: { ...keystore.addresses, [chain]: [] }, hasPassphrase };
+      run(findUsedAddresses(networkName, chain, ks), 'password', seed, new Set());
+      return message.warning.mock.calls.map(([text]) => text);
+    };
+    expect(warnings('Litecoin', 'ltc', true)).toEqual(['No used address on Litecoin: if this wallet has coins there, check the passphrase']);
+    expect(warnings('Litecoin Testnet', 'ltctest', true)).toEqual([]);
+    expect(warnings('Litecoin, no passphrase', 'ltc', false)).toEqual([]);
   });
 });

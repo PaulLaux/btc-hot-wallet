@@ -1,9 +1,10 @@
 import * as btc from '@scure/btc-signer';
 import { hex } from '@scure/base';
+import { mnemonicToSeedSync } from '@scure/bip39';
 import { deriveAddresses, privateKey, checkAddress, toSats, fromSats, buildTx, signTx } from '../bitcoin';
 import { coinsOf } from './coins';
 
-const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+const seed = mnemonicToSeedSync('abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about');
 // BIP-84 test vectors m/84'/0'/0'/0/{0,1}, and the testnet addresses of m/84'/1'/0'/0/{0,1}
 const main = ['bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu', 'bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g'];
 const test = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97'];
@@ -19,11 +20,11 @@ const outputsOf = (tx) => Object.fromEntries([...Array(tx.outputsLength).keys()]
 
 describe('addresses', () => {
   it('derives BIP-84 receive addresses', () => {
-    expect(deriveAddresses(mnemonic, 'main', 0, 2)).toEqual(main);
-    expect(deriveAddresses(mnemonic, 'test', 0, 2)).toEqual(test);
-    expect(deriveAddresses(mnemonic, 'test', 1, 1)).toEqual([test[1]]);
-    expect(deriveAddresses(mnemonic, 'ltc', 0, 2)).toEqual(ltc);
-    expect(deriveAddresses(mnemonic, 'ltctest', 0, 2)).toEqual(ltctest);
+    expect(deriveAddresses(seed, 'main', 0, 2)).toEqual(main);
+    expect(deriveAddresses(seed, 'test', 0, 2)).toEqual(test);
+    expect(deriveAddresses(seed, 'test', 1, 1)).toEqual([test[1]]);
+    expect(deriveAddresses(seed, 'ltc', 0, 2)).toEqual(ltc);
+    expect(deriveAddresses(seed, 'ltctest', 0, 2)).toEqual(ltctest);
   });
 
   it('accepts every address type of the chain, and nothing else', () => {
@@ -93,8 +94,8 @@ describe('transactions', () => {
 
   it('signs exactly the built transaction, and only with the key of the sender', () => {
     const { psbt } = buildTx(coins, from, to, 120000n, 2n, 'test');
-    expect(() => signTx(psbt, privateKey(mnemonic, 'test', 1))).toThrow();
-    const signed = signTx(psbt, privateKey(mnemonic, 'test', 0));
+    expect(() => signTx(psbt, privateKey(seed, 'test', 1))).toThrow();
+    const signed = signTx(psbt, privateKey(seed, 'test', 0));
     const tx = btc.Transaction.fromRaw(hex.decode(signed.hex));
     expect(tx.id).toBe(signed.id);
     expect(outputsOf(tx)).toEqual(outputsOf(btc.Transaction.fromPSBT(hex.decode(psbt))));

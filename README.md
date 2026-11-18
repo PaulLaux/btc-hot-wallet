@@ -7,7 +7,8 @@ Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) 
 ## Features
 
 - BIP-39 seed (12 words; 24 also accepted on restore) and native SegWit addresses on the BIP-84 path (`m/84'/0'/0'/0/n`, Litecoin `m/84'/2'/0'/0/n`, test networks `m/84'/1'/0'/0/n`), so the seed also works in other wallets such as Sparrow
-- The seed is stored in the browser, encrypted with your password (PBKDF2 + AES-GCM)
+- Restore also takes a BIP-39 passphrase (the "25th word", as on a Ledger); a wallet with one warns when it finds no used address on Bitcoin or Litecoin, the sign of a mistyped passphrase
+- The seed and passphrase are stored in the browser, encrypted with your password (PBKDF2 + AES-GCM)
 - Transactions are built and signed in the page; you check the amount, both addresses and the fee before sending
 - Fee: slow, normal or fast; transactions signal replace-by-fee
 - Change goes back to the sending address, or to the fee when it is too small for nodes to relay (546 sats, 5460 on Litecoin); coins of 546 sats or less are never spent (they may carry inscriptions)
@@ -46,7 +47,7 @@ Built with [@scure/btc-signer](https://github.com/paulmillr/scure-btc-signer) (a
 
 - `app/utils/bitcoin.js`: the chains (Bitcoin, Litecoin, their test networks), addresses, keys, building and signing transactions
 - `app/utils/esplora.js`: network access (balances, coins, fee rates, broadcast) with API failover
-- `app/utils/wallet.js`: seed encryption and the stored addresses
+- `app/utils/wallet.js`: seed and passphrase encryption, and the stored addresses
 - `app/containers/HomePage`: wallet actions (create, restore, unlock, add address, save and load)
 - `app/containers/Header`: all network communication (connect, restore scan, balances, sending, exchange rates) in `saga.js`; the networks in `network.js`
 - `app/containers/SendToken`: state of the send dialog; checks and sending happen in Header
