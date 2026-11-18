@@ -11,7 +11,7 @@ const LTC = { bech32: 'ltc', pubKeyHash: 0x30, scriptHash: 0x32, wif: 0xb0 };
 const LTC_TEST = { bech32: 'tltc', pubKeyHash: 0x6f, scriptHash: 0x3a, wif: 0xef };
 
 /**
- * Each chain: its coin and address format, and the coin type of its receive keys m/84'/<coin type>'/0'/0
+ * Each chain: its coin and address format, and the coin type of its keys m/84'/<coin type>'/0'/<branch>
  * (SLIP-44: 1 on every test network). Networks may share a chain: Testnet4 and Signet use 'test'.
  * dustRelayFeeRate (sat/vB): nodes relay no output worth less than creating and spending it at this rate;
  * smaller change goes to the fee (182 bytes, as @scure/btc-signer counts: 546 sats on Bitcoin, 5460 on Litecoin).
@@ -25,17 +25,18 @@ export const chains = {
 const RBF = 0xfffffffd; // signals replace-by-fee: a stuck transaction can be resent with a higher fee
 const DUST = 546n; // coins this small may carry an inscription: never spend them
 
-// `seed`: the BIP-39 seed (64 bytes) of the mnemonic and passphrase, from utils/wallet.js openVault
-const receiveKeys = (seed, chain) => HDKey.fromMasterSeed(seed).derive(`m/84'/${chains[chain].coinType}'/0'/0`);
+// `seed`: the BIP-39 seed (64 bytes) of the mnemonic and passphrase, from utils/wallet.js openVault.
+// `branch`: 0 receive addresses, 1 change addresses (this wallet sends change back to the sender: only other wallets use them)
+const branchKeys = (seed, chain, branch) => HDKey.fromMasterSeed(seed).derive(`m/84'/${chains[chain].coinType}'/0'/${branch}`);
 
-/** `count` receive addresses, from index `from` */
-export function deriveAddresses(seed, chain, from, count) {
-  const keys = receiveKeys(seed, chain);
+/** `count` addresses of the branch, from index `from` */
+export function deriveAddresses(seed, chain, from, count, branch = 0) {
+  const keys = branchKeys(seed, chain, branch);
   return Array.from({ length: count }, (_, i) => btc.p2wpkh(keys.deriveChild(from + i).publicKey, chains[chain].network).address);
 }
 
-/** Private key of receive address `index` */
-export const privateKey = (seed, chain, index) => receiveKeys(seed, chain).deriveChild(index).privateKey;
+/** Private key of address `index` of the branch */
+export const privateKey = (seed, chain, index, branch = 0) => branchKeys(seed, chain, branch).deriveChild(index).privateKey;
 
 /** Throws unless `address` is valid on this chain; any type (on Bitcoin 1…, 3…, bc1q…, bc1p…) */
 export function checkAddress(address, chain) {

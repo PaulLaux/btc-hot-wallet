@@ -8,9 +8,9 @@ import { chains } from 'utils/bitcoin';
 
 const paths = (
   <>
-    Native SegWit (BIP-84) addresses:
-    {Object.values(chains).map(({ name, coinType }) => <div key={name}>{`${name}: m/84'/${coinType}'/0'/0/n`}</div>)}
-    Change from coins sent with other wallets (…/1/n) doesn&apos;t show here.
+    Native SegWit (BIP-84) accounts:
+    {Object.values(chains).map(({ name, coinType }) => <div key={name}>{`${name}: m/84'/${coinType}'/0'`}</div>)}
+    Receive addresses …/0/n, change addresses …/1/n.
   </>
 );
 

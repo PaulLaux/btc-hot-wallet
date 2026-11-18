@@ -85,7 +85,7 @@ const makeSelectChain = () => createSelector(
   (homeState) => homeState.chain
 );
 
-/** { address1: { balance: satsString / false, unconfirmed: satsString }, ... } */
+/** { address1: { balance: satsString / false, unconfirmed: satsString, change: true / absent }, ... } */
 const makeSelectAddressMap = () => createSelector(
   selectHome,
   (homeState) => homeState.addressList

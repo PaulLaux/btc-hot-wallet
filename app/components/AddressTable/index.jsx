@@ -6,7 +6,7 @@
 
 import React from 'react';
 import styled from 'styled-components';
-import { Table, Grid, Typography } from 'antd';
+import { Table, Grid, Typography, Tag } from 'antd';
 import CurrencyDropdown from 'components/CurrencyDropdown';
 import { fromSats } from 'utils/bitcoin';
 
@@ -49,9 +49,10 @@ function AddressTable(props) {
   const currencyDropdownProps = { exchangeRates, onSelectCurrency, convertTo };
   const narrow = !Grid.useBreakpoint().md; // phones: compact cells, short addresses
 
-  const rows = Object.entries(addressMap).map(([address, { balance, unconfirmed }]) => ({
+  const rows = Object.entries(addressMap).map(([address, { balance, unconfirmed, change }]) => ({
     key: address,
     address,
+    change,
     balance: formatBalance(balance),
     // not in the balance yet: incoming payments (+) or sends (-) not in a block
     unconfirmed: unconfirmed && unconfirmed !== '0' ? `${formatBalance(unconfirmed)} unconfirmed` : '',
@@ -72,7 +73,12 @@ function AddressTable(props) {
         dataIndex="address"
         key="address"
         align="center"
-        render={(address) => <Text copyable={{ text: address }}>{narrow ? shortAddress(address) : address}</Text>}
+        render={(address, record) => (
+          <>
+            <Text copyable={{ text: address }}>{narrow ? shortAddress(address) : address}</Text>
+            {record.change && <Tag title="Where another wallet put the leftover of a payment" style={{ marginInlineStart: 8 }}>change</Tag>}
+          </>
+        )}
       />
       <Column
         title={<>Balance ({coin})<br /><CurrencyDropdown {...currencyDropdownProps} /></>}

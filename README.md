@@ -6,13 +6,13 @@ Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) 
 
 ## Features
 
-- BIP-39 seed (12 words; 24 also accepted on restore) and native SegWit addresses on the BIP-84 path (`m/84'/0'/0'/0/n`, Litecoin `m/84'/2'/0'/0/n`, test networks `m/84'/1'/0'/0/n`), so the seed also works in other wallets such as Sparrow
+- BIP-39 seed (12 words; 24 also accepted on restore) and native SegWit addresses on the BIP-84 path (`m/84'/0'/0'/0/n`, Litecoin `m/84'/2'/0'/0/n`, test networks `m/84'/1'/0'/0/n`; change addresses `…/1/n`), so the seed also works in other wallets such as Sparrow
 - Restore also takes a BIP-39 passphrase (the "25th word", as on a Ledger); a wallet with one warns when it finds no used address on Bitcoin or Litecoin, the sign of a mistyped passphrase
 - The seed and passphrase are stored in the browser, encrypted with your password (PBKDF2 + AES-GCM)
 - Transactions are built and signed in the page; you check the amount, both addresses and the fee before sending
 - Fee: slow, normal or fast; transactions signal replace-by-fee
 - Change goes back to the sending address, or to the fee when it is too small for nodes to relay (546 sats, 5460 on Litecoin); coins of 546 sats or less are never spent (they may carry inscriptions)
-- Restoring a seed finds the addresses it used before: it checks until 20 unused addresses follow the last used one (the BIP-44 gap limit, as in Ledger Live), 20 addresses per request where the API allows
+- Restoring a seed finds the receive and change addresses it used before: it checks until 20 unused addresses follow the last used one (the BIP-44 gap limit, as in Ledger Live), 20 addresses per request where the API allows. Change addresses (where other wallets put the leftover of each payment) are listed with a "change" tag, and hidden once empty
 - Balances count confirmed transactions only; unconfirmed ones show as a note below
 - Locks itself 15 minutes after unlocking
 - Content Security Policy: the page runs only its own scripts and connects only to its APIs and CoinGecko

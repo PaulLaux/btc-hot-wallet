@@ -11,6 +11,9 @@ const test = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4
 // Litecoin m/84'/2'/0'/0/{0,1}, and its testnet: the keys of the test addresses above
 const ltc = ['ltc1qjmxnz78nmc8nq77wuxh25n2es7rzm5c2rkk4wh', 'ltc1qwlezpr3890hcp6vva9twqh27mr6edadreqvhnn'];
 const ltctest = ['tltc1q6rz28mcfaxtmd6v789l9rrlrusdprr9pesrjxk', 'tltc1qd7spv5q28348xl4myc8zmh983w5jx32ctl5d4h'];
+// change addresses: the BIP-84 test vector m/84'/0'/0'/1/0, and the testnet addresses of m/84'/1'/0'/1/{0,1}
+const mainChange = 'bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el';
+const testChange = ['tb1q9u62588spffmq4dzjxsr5l297znf3z6j5p2688', 'tb1qkwgskuzmmwwvqajnyr7yp9hgvh5y45kg8wvdmd'];
 
 // { address: amount } of a transaction's outputs
 const outputsOf = (tx) => Object.fromEntries([...Array(tx.outputsLength).keys()].map((i) => {
@@ -19,12 +22,14 @@ const outputsOf = (tx) => Object.fromEntries([...Array(tx.outputsLength).keys()]
 }));
 
 describe('addresses', () => {
-  it('derives BIP-84 receive addresses', () => {
+  it('derives BIP-84 receive and change addresses', () => {
     expect(deriveAddresses(seed, 'main', 0, 2)).toEqual(main);
     expect(deriveAddresses(seed, 'test', 0, 2)).toEqual(test);
     expect(deriveAddresses(seed, 'test', 1, 1)).toEqual([test[1]]);
     expect(deriveAddresses(seed, 'ltc', 0, 2)).toEqual(ltc);
     expect(deriveAddresses(seed, 'ltctest', 0, 2)).toEqual(ltctest);
+    expect(deriveAddresses(seed, 'main', 0, 1, 1)).toEqual([mainChange]);
+    expect(deriveAddresses(seed, 'test', 0, 2, 1)).toEqual(testChange);
   });
 
   it('accepts every address type of the chain, and nothing else', () => {

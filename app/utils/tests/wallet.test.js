@@ -18,6 +18,8 @@ const oldVault = {
 const main0 = 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu';
 const test = ['tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl', 'tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97'];
 const ltc = { ltc: ['ltc1qjmxnz78nmc8nq77wuxh25n2es7rzm5c2rkk4wh'], ltctest: ['tltc1q6rz28mcfaxtmd6v789l9rrlrusdprr9pesrjxk'] };
+// testnet change addresses m/84'/1'/0'/1/{0,1}
+const testChange = ['tb1q9u62588spffmq4dzjxsr5l297znf3z6j5p2688', 'tb1qkwgskuzmmwwvqajnyr7yp9hgvh5y45kg8wvdmd'];
 const addressOf = (key) => btc.p2wpkh(pubECDSA(key), btc.TEST_NETWORK).address;
 
 describe('wallet', () => {
@@ -58,5 +60,16 @@ describe('wallet', () => {
     // the addresses are stored unencrypted: a changed list must not get a key for the wrong index
     const swapped = { ...vault, addresses: { ...vault.addresses, test: [test[1], test[0]] } };
     expect(() => keyFor(swapped, seed, 'test', test[1])).toThrow('is not in this wallet');
+  });
+
+  it('gives the signing key of a change address, found by the restore scan', async () => {
+    const vault = await createVault(mnemonic, 'password-123');
+    expect(vault.change).toEqual({ main: [], test: [], ltc: [], ltctest: [] });
+    expect(() => keyFor(vault, seed, 'test', testChange[1])).toThrow('is not in this wallet');
+    const found = { ...vault, change: { ...vault.change, test: testChange } };
+    expect(addressOf(keyFor(found, seed, 'test', testChange[1]))).toBe(testChange[1]);
+    // listed as a receive address, a change address gets no key
+    const moved = { ...vault, addresses: { ...vault.addresses, test: [test[0], testChange[1]] } };
+    expect(() => keyFor(moved, seed, 'test', testChange[1])).toThrow('is not in this wallet');
   });
 });

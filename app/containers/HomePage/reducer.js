@@ -75,7 +75,7 @@ const initialState = {
 
   keystore: false,
   chain: false, // the addresses shown are of this chain: a key of chains in utils/bitcoin.js
-  addressList: false, // { address1: { balance: satsString / false, unconfirmed: satsString }, ... }
+  addressList: false, // { address1: { balance: satsString / false, unconfirmed: satsString, change: true / absent }, ... }
 
   exchangeRates: {}, // price of each coin: { BTC: { usd: 94000.5, eur: 81000.25 }, ... }
   convertTo: 'usd', // currency shown under the balances, or 'none'
@@ -143,7 +143,10 @@ export default createReducer(initialState, (builder) => builder
   .addCase(CHANGE_BALANCE, (s, a) => {
     // ignore balances that arrive after the address was removed
     const row = s.addressList && s.addressList[a.address];
-    if (row) Object.assign(row, { balance: a.balance, unconfirmed: a.unconfirmed });
+    if (!row) return;
+    // an empty change address stays empty (wallets never reuse them): no longer shown, nor checked
+    if (row.change && a.balance === '0' && a.unconfirmed === '0') delete s.addressList[a.address];
+    else Object.assign(row, { balance: a.balance, unconfirmed: a.unconfirmed });
   })
 
   .addCase(SHOW_SEND_TOKEN, (s) => { s.isShowSendToken = true; })
@@ -163,7 +166,11 @@ export default createReducer(initialState, (builder) => builder
       addressListMsg: 'New address generated successfully',
       keystore: a.keystore,
     });
-    s.addressList[a.newAddress] = { balance: false };
+    // a receive address: before the change addresses
+    const rows = Object.entries(s.addressList);
+    const change = rows.findIndex(([, row]) => row.change);
+    rows.splice(change < 0 ? rows.length : change, 0, [a.newAddress, { balance: false }]);
+    s.addressList = Object.fromEntries(rows);
   })
   .addCase(GENERATE_ADDRESS_ERROR, (s, a) => {
     Object.assign(s, { addressListLoading: false, addressListError: a.error });

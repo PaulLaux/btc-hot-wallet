@@ -229,10 +229,13 @@ export function generateKeystore(passphrase = '') {
 }
 
 /**
- * Address map for the address table, in the order of the addresses: { address: { balance: false }, ... }
- * @param {string[]} addresses
+ * Address map for the address table: the chain's receive addresses, then its change addresses (marked change), in
+ * order: { address: { balance: false }, ..., changeAddress: { balance: false, change: true }, ... }
  */
-const createAddressMap = (addresses) => Object.fromEntries(addresses.map((address) => [address, { balance: false }]));
+const createAddressMap = (keystore, chain) => Object.fromEntries([
+  ...keystore.addresses[chain].map((address) => [address, { balance: false }]),
+  ...keystore.change[chain].map((address) => [address, { balance: false, change: true }]),
+]);
 
 /**
  * The keystore is ready: show its addresses of the chain
@@ -246,7 +249,7 @@ export function generateKeystoreSuccess(keystore, chain) {
     type: GENERATE_KEYSTORE_SUCCESS,
     keystore,
     chain,
-    addressMap: createAddressMap(keystore.addresses[chain]),
+    addressMap: createAddressMap(keystore, chain),
   };
 }
 
@@ -310,17 +313,17 @@ export function hideSendToken() {
 }
 
 /**
- * Show the addresses of a chain, without balances (after connecting to a network)
- * @param  {string[]} addresses ['bc1q..']
+ * Show the keystore's addresses of a chain, without balances (after connecting to a network)
+ * @param  {keystore} keystore
  * @param  {string} chain 'main' or 'test'
  *
  * @return {object}    An action object with a type of SET_ADDRESSES, the chain and the address map
  */
-export function setAddresses(addresses, chain) {
+export function setAddresses(keystore, chain) {
   return {
     type: SET_ADDRESSES,
     chain,
-    addressMap: createAddressMap(addresses),
+    addressMap: createAddressMap(keystore, chain),
   };
 }
 

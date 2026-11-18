@@ -1,7 +1,8 @@
 /**
  * HD wallet: a BIP-39 mnemonic and optional passphrase, encrypted with the user's password (PBKDF2 + AES-GCM).
  * Addresses (BIP-84, see chains in utils/bitcoin.js) are stored unencrypted per chain, { main: [...], ltc: [...], ... },
- * so a locked wallet can still show balances; hasPassphrase too, for the restore scan's warning (Header/saga.js).
+ * so a locked wallet can still show balances: receive addresses in `addresses`, and in `change` the change addresses
+ * other wallets used (found by the restore scan, Header/saga.js); hasPassphrase too, for the scan's warning.
  */
 import { hex } from '@scure/base';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
@@ -33,6 +34,7 @@ export async function createVault(mnemonic, password, passphrase = '') {
     iv: hex.encode(iv),
     data: hex.encode(new Uint8Array(data)),
     addresses: Object.fromEntries(Object.keys(chains).map((chain) => [chain, deriveAddresses(seed, chain, 0, 1)])),
+    change: Object.fromEntries(Object.keys(chains).map((chain) => [chain, []])),
     hasPassphrase: passphrase !== '',
   };
 }
@@ -61,13 +63,15 @@ export function addAddress(vault, seed, chain) {
 }
 
 /**
- * Signing key of one of the vault's addresses. The addresses are stored unencrypted, so the address is
- * derived again: a key is only returned for an address the seed really has at that index.
+ * Signing key of one of the vault's receive or change addresses. The addresses are stored unencrypted, so the
+ * address is derived again: a key is only returned for an address the seed really has at that index.
  */
 export function keyFor(vault, seed, chain, address) {
-  const index = vault.addresses[chain].indexOf(address);
-  if (index < 0 || deriveAddresses(seed, chain, index, 1)[0] !== address) {
+  const receive = vault.addresses[chain].indexOf(address);
+  const branch = receive < 0 ? 1 : 0;
+  const index = receive < 0 ? vault.change[chain].indexOf(address) : receive;
+  if (index < 0 || deriveAddresses(seed, chain, index, 1, branch)[0] !== address) {
     throw new Error(`Address ${address} is not in this wallet`);
   }
-  return privateKey(seed, chain, index);
+  return privateKey(seed, chain, index, branch);
 }

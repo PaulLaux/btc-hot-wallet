@@ -252,8 +252,11 @@ export function* loadWalletS() {
     if (!ks) {
       throw new Error('No keystore found in localStorage');
     }
-    // a wallet saved before Litecoin has none of its addresses: shown empty until one is added
-    ks.addresses = { ...Object.fromEntries(Object.keys(chains).map((chain) => [chain, []])), ...ks.addresses };
+    // a wallet saved before Litecoin has none of its addresses (shown empty until one is added), one saved before
+    // change addresses none of those
+    const empty = Object.fromEntries(Object.keys(chains).map((chain) => [chain, []]));
+    ks.addresses = { ...empty, ...ks.addresses };
+    ks.change = { ...empty, ...ks.change };
 
     yield put(generateKeystoreSuccess(ks, Network[defaultNetwork].chain));
     yield put(loadNetwork(defaultNetwork));
