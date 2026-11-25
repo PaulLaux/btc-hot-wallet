@@ -3,7 +3,7 @@ import react from 'eslint-plugin-react';
 import globals from 'globals';
 
 export default [
-  { ignores: ['build/', 'docs/', 'app/public/'] },
+  { ignores: ['build/', 'app/public/'] },
   js.configs.recommended,
   react.configs.flat.recommended,
   {

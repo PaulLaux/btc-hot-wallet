@@ -2,6 +2,8 @@
 
 A Bitcoin and Litecoin web wallet. Keys are generated, stored and used for signing inside the page, so it needs no extension or external signer.
 
+Live at https://btc.hot-wallet.org
+
 Background: the Bitcoin version of [ETH Hot Wallet](https://eth.hot-wallet.org) ([how that was built](https://medium.freecodecamp.org/how-to-build-an-ethereum-wallet-web-app-ac77dcaac573), Medium).
 
 ## Features
@@ -40,6 +42,10 @@ Requires Node.js 20.19+ or 22.12+.
 | `npm run preview` | Serve the production bundle locally |
 | `npm test` | Run the tests (Vitest) |
 | `npm run lint` | Lint (ESLint) |
+
+### Deploy
+
+GitHub Actions (`.github/workflows/ci.yml`) lints, tests and builds every push and pull request. Pushes to `master` and `v*` tags are published to GitHub Pages at https://btc.hot-wallet.org: the repository's Pages settings use GitHub Actions as the source and `btc.hot-wallet.org` as the custom domain (`app/public/CNAME` names it too, though Actions deploys go by the setting).
 
 Built with [@scure/btc-signer](https://github.com/paulmillr/scure-btc-signer) (addresses, transactions, signing, Esplora client), [@scure/bip32 and bip39](https://github.com/paulmillr/scure-bip32), [react-boilerplate](https://github.com/react-boilerplate/react-boilerplate) (React, Redux, Redux-Saga, Reselect), [Ant Design](https://github.com/ant-design/ant-design) and [Vite](https://vite.dev).
 

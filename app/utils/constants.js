@@ -16,7 +16,7 @@ export const defaultNetwork = 'Testnet4';
 export const localStorageKey = 'btc-wallet';
 
 // addresses:
-export const github = 'https://github.com/PaulLaux/eth-hot-wallet';
+export const github = 'https://github.com/PaulLaux/btc-hot-wallet';
 
 // APIs:
 // The CoinGecko ID of each coin (see chains in utils/bitcoin.js)

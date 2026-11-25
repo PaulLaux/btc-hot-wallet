@@ -28,13 +28,11 @@ jobs:
       - run: npm test
       - run: npm run build
       - if: github.event_name == 'push'
-        run: cp -r docs build/
-      - if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v5
         with:
           path: build
 
-  # Publish the tested build of master and v* tags to GitHub Pages
+  # Publish the tested build of master and v* tags to GitHub Pages: https://btc.hot-wallet.org
   deploy:
     needs: ci
     if: github.event_name == 'push'
