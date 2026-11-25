@@ -1,7 +1,7 @@
-/* Auto generated password lenght */
+/* Auto generated password length */
 export const generatedPasswordLength = 12;
 
-// time in ms for check balancess polling
+// time in ms for check balances polling
 export const timeBetweenCheckbalances = 180 * 1000;
 
 // an unlocked wallet locks itself after this time (ms)

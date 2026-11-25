@@ -56,7 +56,7 @@ Built with [@scure/btc-signer](https://github.com/paulmillr/scure-btc-signer) (a
 - `app/utils/wallet.js`: seed and passphrase encryption, and the stored addresses
 - `app/containers/HomePage`: wallet actions (create, restore, unlock, add address, save and load)
 - `app/containers/Header`: all network communication (connect, restore scan, balances, sending, exchange rates) in `saga.js`; the networks in `network.js`
-- `app/containers/SendToken`: state of the send dialog; checks and sending happen in Header
+- `app/containers/Send`: state of the send dialog; checks and sending happen in Header
 
 ## License
 

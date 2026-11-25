@@ -23,8 +23,8 @@ export const GENERATE_KEYSTORE_ERROR = 'btc-hot-wallet/HomePage/GENERATE_KEYSTOR
 
 export const CHANGE_BALANCE = 'btc-hot-wallet/HomePage/CHANGE_BALANCE';
 
-export const SHOW_SEND_TOKEN = 'btc-hot-wallet/HomePage/SHOW_SEND_TOKEN';
-export const HIDE_SEND_TOKEN = 'btc-hot-wallet/HomePage/HIDE_SEND_TOKEN';
+export const SHOW_SEND = 'btc-hot-wallet/HomePage/SHOW_SEND';
+export const HIDE_SEND = 'btc-hot-wallet/HomePage/HIDE_SEND';
 
 export const SET_ADDRESSES = 'btc-hot-wallet/HomePage/SET_ADDRESSES';
 

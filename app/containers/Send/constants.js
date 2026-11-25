@@ -1,0 +1,19 @@
+/*
+ *
+ * Send constants
+ *
+ */
+
+export const CHANGE_FROM = 'app/Send/CHANGE_FROM';
+export const CHANGE_AMOUNT = 'app/Send/CHANGE_AMOUNT';
+export const CHANGE_TO = 'app/Send/CHANGE_TO';
+export const CHANGE_FEE_SPEED = 'app/Send/CHANGE_FEE_SPEED';
+
+export const CONFIRM_SEND_TRANSACTION = 'app/Send/CONFIRM_SEND_TRANSACTION';
+export const CONFIRM_SEND_TRANSACTION_SUCCESS = 'app/Send/CONFIRM_SEND_TRANSACTION_SUCCESS';
+export const CONFIRM_SEND_TRANSACTION_ERROR = 'app/Send/CONFIRM_SEND_TRANSACTION_ERROR';
+
+export const ABORT_TRANSACTION = 'app/Send/ABORT_TRANSACTION';
+export const SEND_TRANSACTION = 'app/Send/SEND_TRANSACTION';
+export const SEND_TRANSACTION_SUCCESS = 'app/Send/SEND_TRANSACTION_SUCCESS';
+export const SEND_TRANSACTION_ERROR = 'app/Send/SEND_TRANSACTION_ERROR';

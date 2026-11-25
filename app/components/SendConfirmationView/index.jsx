@@ -22,16 +22,16 @@ const Msg = styled.div`
 
 function SendConfirmationView(props) {
   const {
-    comfirmationLoading,
+    confirmationLoading,
     confirmationError,
     confirmationMsg,
     onSendTransaction,
     onAbortTransaction,
-    isSendComfirmationLocked,
+    isSendConfirmationLocked,
     sendError,
     coin,
   } = props;
-  if (comfirmationLoading) {
+  if (confirmationLoading) {
     return (
       <Div>
         <Spin
@@ -68,11 +68,11 @@ function SendConfirmationView(props) {
           type="info"
         />
         <br />
-        <Button icon={<VerticalAlignTopOutlined />} onClick={onSendTransaction} disabled={isSendComfirmationLocked} >
+        <Button icon={<VerticalAlignTopOutlined />} onClick={onSendTransaction} disabled={isSendConfirmationLocked} >
           {sendError ? 'Try again' : `Send ${coin}`}
         </Button>
         {' '}
-        <Button icon={<CloseOutlined />} onClick={onAbortTransaction} disabled={isSendComfirmationLocked} >
+        <Button icon={<CloseOutlined />} onClick={onAbortTransaction} disabled={isSendConfirmationLocked} >
           Back
         </Button>
       </Div>

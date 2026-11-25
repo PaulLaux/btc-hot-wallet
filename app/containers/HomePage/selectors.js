@@ -49,9 +49,9 @@ const makeSelectPassword = () => createSelector(
   (homeState) => homeState.password
 );
 
-const makeSelectIsComfirmed = () => createSelector(
+const makeSelectIsConfirmed = () => createSelector(
   selectHome,
-  (homeState) => homeState.isComfirmed
+  (homeState) => homeState.isConfirmed
 );
 
 
@@ -74,9 +74,9 @@ const makeSelectUserPassword = () => createSelector(
   (homeState) => homeState.userPassword
 );
 
-const makeSelectIsShowSendToken = () => createSelector(
+const makeSelectIsShowSend = () => createSelector(
   selectHome,
-  (homeState) => homeState.isShowSendToken
+  (homeState) => homeState.isShowSend
 );
 
 /** 'main' or 'test': the chain of the addresses shown */
@@ -157,12 +157,12 @@ export {
   makeSelectRestoreWalletError,
   makeSelectSeed,
   makeSelectPassword,
-  makeSelectIsComfirmed,
+  makeSelectIsConfirmed,
   makeSelectKeystore,
   makeSelectShowRestoreWallet,
   makeSelectUserSeed,
   makeSelectUserPassword,
-  makeSelectIsShowSendToken,
+  makeSelectIsShowSend,
 
   makeSelectAddressListLoading,
   makeSelectAddressListError,

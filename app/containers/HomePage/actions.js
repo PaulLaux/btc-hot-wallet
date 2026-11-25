@@ -35,8 +35,8 @@ import {
 
   CHANGE_BALANCE,
 
-  SHOW_SEND_TOKEN,
-  HIDE_SEND_TOKEN,
+  SHOW_SEND,
+  HIDE_SEND,
 
   SET_ADDRESSES,
 
@@ -88,7 +88,7 @@ export function generateWallet() {
  *
  * @return {object}      An action object with a type of GENERATE_WALLET_SUCCESS passing the repos
  */
-export function generateWalletSucces(seed, password) {
+export function generateWalletSuccess(seed, password) {
   return {
     type: GENERATE_WALLET_SUCCESS,
     seed,
@@ -289,28 +289,28 @@ export function changeBalance(address, balance, unconfirmed, used) {
   };
 }
 
-/* ******************* Show / hide SEND_TOKEN ***************************** */
+/* ******************* Show / hide SEND ***************************** */
 /**
- * Show the SendToken container
+ * Show the Send container
  * @param  {string} address 'bc1q..'
  *
- * @return {object} An action object with a type of SHOW_SEND_TOKEN
+ * @return {object} An action object with a type of SHOW_SEND
  */
-export function showSendToken(address) {
+export function showSend(address) {
   return {
-    type: SHOW_SEND_TOKEN,
+    type: SHOW_SEND,
     address,
   };
 }
 
 /**
- * Hide the SendToken container
+ * Hide the Send container
  *
- * @return {object}    An action object with a type of HIDE_SEND_TOKEN
+ * @return {object}    An action object with a type of HIDE_SEND
  */
-export function hideSendToken() {
+export function hideSend() {
   return {
-    type: HIDE_SEND_TOKEN,
+    type: HIDE_SEND,
   };
 }
 

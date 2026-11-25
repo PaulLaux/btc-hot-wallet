@@ -12,7 +12,7 @@ import {
   UNLOCK_WALLET,
   UNLOCK_WALLET_SUCCESS,
   CLOSE_WALLET,
-  SHOW_SEND_TOKEN,
+  SHOW_SEND,
   SAVE_WALLET,
   LOAD_WALLET,
 } from 'containers/HomePage/constants';
@@ -30,7 +30,7 @@ import {
 import { loadNetwork } from 'containers/Header/actions';
 import Network from 'containers/Header/network';
 
-import { changeFrom } from 'containers/SendToken/actions';
+import { changeFrom } from 'containers/Send/actions';
 
 import generateString from 'utils/crypto';
 import askPassword from 'utils/askPassword';
@@ -44,7 +44,7 @@ import { timer } from 'utils/common';
 import { checkBalance, GAP } from 'containers/Header/saga';
 
 import {
-  generateWalletSucces,
+  generateWalletSuccess,
   generateWalletError,
   generateKeystoreSuccess,
   generateKeystoreError,
@@ -74,7 +74,7 @@ export function* generateWallet() {
 
     yield call(timer, 500);
 
-    yield put(generateWalletSucces(seed, password));
+    yield put(generateWalletSuccess(seed, password));
   } catch (err) {
     yield put(generateWalletError(err.message));
   }
@@ -251,7 +251,7 @@ export function* loadWalletS() {
     yield call(timer, 1000);
     const existingKs = yield select(makeSelectKeystore());
     if (existingKs) {
-      throw new Error('Existing keystore present  - aborting load form localStorage');
+      throw new Error('Existing keystore present  - aborting load from localStorage');
     }
 
     const ks = JSON.parse(localStorage.getItem(localStorageKey));
@@ -298,7 +298,7 @@ export default function* walletData() {
   yield takeLatest(UNLOCK_WALLET, unlockWallet);
   // a new or restored wallet starts unlocked
   yield takeLatest([UNLOCK_WALLET_SUCCESS, GENERATE_KEYSTORE], autoLock);
-  yield takeLatest(SHOW_SEND_TOKEN, changeSourceAddress);
+  yield takeLatest(SHOW_SEND, changeSourceAddress);
   yield takeLatest(CLOSE_WALLET, closeWallet);
 
   yield takeLatest(SAVE_WALLET, saveWalletS);

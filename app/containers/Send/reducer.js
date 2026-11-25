@@ -1,6 +1,6 @@
 /*
  *
- * SendToken reducer
+ * Send reducer
  *
  */
 import { createReducer } from '@reduxjs/toolkit';
@@ -10,9 +10,9 @@ import {
   CHANGE_TO,
   CHANGE_FEE_SPEED,
 
-  COMFIRM_SEND_TRANSACTION,
-  COMFIRM_SEND_TRANSACTION_SUCCESS,
-  COMFIRM_SEND_TRANSACTION_ERROR,
+  CONFIRM_SEND_TRANSACTION,
+  CONFIRM_SEND_TRANSACTION_SUCCESS,
+  CONFIRM_SEND_TRANSACTION_ERROR,
 
   ABORT_TRANSACTION,
   SEND_TRANSACTION,
@@ -29,7 +29,7 @@ const initialState = {
   feeSpeed: 'normal', // 'slow', 'normal' or 'fast'
   locked: false,
 
-  comfirmationLoading: false,
+  confirmationLoading: false,
   confirmationError: false,
   confirmationMsg: false,
   psbt: false, // the confirmed unsigned transaction (hex): exactly this is signed on send
@@ -46,17 +46,17 @@ export default createReducer(initialState, (builder) => builder
   .addCase(CHANGE_TO, (s, a) => { s.to = a.address; })
   .addCase(CHANGE_FEE_SPEED, (s, a) => { s.feeSpeed = a.speed; })
 
-  .addCase(COMFIRM_SEND_TRANSACTION, (s) => {
-    Object.assign(s, { comfirmationLoading: true, locked: true });
+  .addCase(CONFIRM_SEND_TRANSACTION, (s) => {
+    Object.assign(s, { confirmationLoading: true, locked: true });
   })
-  .addCase(COMFIRM_SEND_TRANSACTION_SUCCESS, (s, a) => {
-    Object.assign(s, { comfirmationLoading: false, confirmationMsg: a.msg, psbt: a.psbt, confirmationError: false });
+  .addCase(CONFIRM_SEND_TRANSACTION_SUCCESS, (s, a) => {
+    Object.assign(s, { confirmationLoading: false, confirmationMsg: a.msg, psbt: a.psbt, confirmationError: false });
   })
-  .addCase(COMFIRM_SEND_TRANSACTION_ERROR, (s, a) => {
-    Object.assign(s, { comfirmationLoading: false, confirmationError: a.error, locked: false });
+  .addCase(CONFIRM_SEND_TRANSACTION_ERROR, (s, a) => {
+    Object.assign(s, { confirmationLoading: false, confirmationError: a.error, locked: false });
   })
   .addCase(ABORT_TRANSACTION, (s) => {
-    Object.assign(s, { comfirmationLoading: false, confirmationMsg: false, psbt: false, confirmationError: false, locked: false, sendError: false, sendTx: false });
+    Object.assign(s, { confirmationLoading: false, confirmationMsg: false, psbt: false, confirmationError: false, locked: false, sendError: false, sendTx: false });
   })
 
   .addCase(SEND_TRANSACTION, (s) => {

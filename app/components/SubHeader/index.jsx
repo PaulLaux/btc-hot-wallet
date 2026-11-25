@@ -26,7 +26,7 @@ const Div = styled.div`
 
 function SubHeader(props) {
   const {
-    onGenerateWallet, onShowRestoreWallet, isComfirmed, onCloseWallet,
+    onGenerateWallet, onShowRestoreWallet, isConfirmed, onCloseWallet,
     onLockWallet, password, onUnlockWallet,
     /* optional laod / save buttons
      onSaveWallet, saveWalletLoading, saveWalletError,
@@ -72,7 +72,7 @@ function SubHeader(props) {
     />, */
   ];
 
-  const subHeader = isComfirmed ? existingWalletSubHeader : noWalletSubHeader;
+  const subHeader = isConfirmed ? existingWalletSubHeader : noWalletSubHeader;
 
   return (
     <Div>

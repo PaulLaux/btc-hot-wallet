@@ -1,6 +1,6 @@
 /*
  *
- * SendToken actions
+ * Send actions
  *
  */
 import {
@@ -9,9 +9,9 @@ import {
   CHANGE_TO,
   CHANGE_FEE_SPEED,
 
-  COMFIRM_SEND_TRANSACTION,
-  COMFIRM_SEND_TRANSACTION_SUCCESS,
-  COMFIRM_SEND_TRANSACTION_ERROR,
+  CONFIRM_SEND_TRANSACTION,
+  CONFIRM_SEND_TRANSACTION_SUCCESS,
+  CONFIRM_SEND_TRANSACTION_ERROR,
 
   ABORT_TRANSACTION,
   SEND_TRANSACTION,
@@ -40,7 +40,7 @@ export function changeAmount(amount) {
 }
 
 export function changeTo(inputAddress) {
-  // remove unnessesery spaces
+  // remove unnecessary spaces
   const address = inputAddress.replace(/^\s+|\s+$/g, '');
   return {
     type: CHANGE_TO,
@@ -64,11 +64,11 @@ export function changeFeeSpeed(speed) {
 /**
  * initiate confirmation object
  *
- * @return {object}    An action object with a type of COMFIRM_SEND_TRANSACTION
+ * @return {object}    An action object with a type of CONFIRM_SEND_TRANSACTION
  */
 export function confirmSendTransaction() {
   return {
-    type: COMFIRM_SEND_TRANSACTION,
+    type: CONFIRM_SEND_TRANSACTION,
   };
 }
 
@@ -77,11 +77,11 @@ export function confirmSendTransaction() {
  * @param  {string} msg amount, network, addresses and fee
  * @param  {string} psbt the unsigned transaction (PSBT, hex)
  *
- * @return {object}    An action object with a type of COMFIRM_SEND_TRANSACTION_SUCCESS
+ * @return {object}    An action object with a type of CONFIRM_SEND_TRANSACTION_SUCCESS
  */
 export function confirmSendTransactionSuccess(msg, psbt) {
   return {
-    type: COMFIRM_SEND_TRANSACTION_SUCCESS,
+    type: CONFIRM_SEND_TRANSACTION_SUCCESS,
     msg,
     psbt,
   };
@@ -90,17 +90,17 @@ export function confirmSendTransactionSuccess(msg, psbt) {
 /**
  * Error confirming transaction
  *
- * @return {object}    An action object with a type of COMFIRM_SEND_TRANSACTION_ERROR
+ * @return {object}    An action object with a type of CONFIRM_SEND_TRANSACTION_ERROR
  */
 export function confirmSendTransactionError(error) {
   return {
-    type: COMFIRM_SEND_TRANSACTION_ERROR,
+    type: CONFIRM_SEND_TRANSACTION_ERROR,
     error,
   };
 }
 
 /**
- * Abort transaction aftrer it has been confirmed
+ * Abort transaction after it has been confirmed
  *
  * @return {object}    An action object with a type of ABORT_TRANSACTION
  */

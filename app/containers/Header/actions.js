@@ -22,7 +22,7 @@ import {
 } from './constants';
 
 /**
- * Connect to eth network using address from network.js file
+ * Connect to a network of network.js
  *
  * @return {object}    An action object with a type of LOAD_NETWORK
  */

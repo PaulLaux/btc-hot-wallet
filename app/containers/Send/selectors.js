@@ -2,92 +2,92 @@
 import { createSelector } from 'reselect';
 
 /**
- * Direct selector to the sendToken state domain
+ * Direct selector to the send state domain
  */
-const selectSendTokenDomain = (state) => state.sendtoken;
+const selectSendDomain = (state) => state.send;
 
 
 const makeSelectFrom = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.from
 );
 
 const makeSelectTo = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.to
 );
 
 const makeSelectAmount = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.amount
 );
 
-const makeSelectComfirmationLoading = () => createSelector(
-  selectSendTokenDomain,
-  (substate) => substate.comfirmationLoading
+const makeSelectConfirmationLoading = () => createSelector(
+  selectSendDomain,
+  (substate) => substate.confirmationLoading
 );
 
 const makeSelectConfirmationError = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.confirmationError
 );
 
 const makeSelectConfirmationMsg = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.confirmationMsg
 );
 
 const makeSelectSendInProgress = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.sendInProgress
 );
 
 const makeSelectSendError = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.sendError
 );
 
 const makeSelectSendTx = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.sendTx
 );
 
 const makeSelectLocked = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.locked
 );
 
 const makeSelectFeeSpeed = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.feeSpeed
 );
 
 const makeSelectPsbt = () => createSelector(
-  selectSendTokenDomain,
+  selectSendDomain,
   (substate) => substate.psbt
 );
 
-const makeSelectIsSendComfirmationLocked = () => createSelector(
-  selectSendTokenDomain,
+const makeSelectIsSendConfirmationLocked = () => createSelector(
+  selectSendDomain,
   (substate) => substate.sendInProgress !== false || substate.sendTx !== false
 );
 
-// export default makeSelectSendToken;
+// export default makeSelectSend;
 export {
-  selectSendTokenDomain,
+  selectSendDomain,
 
   makeSelectFrom,
   makeSelectTo,
   makeSelectAmount,
   makeSelectLocked,
 
-  makeSelectComfirmationLoading,
+  makeSelectConfirmationLoading,
   makeSelectConfirmationError,
   makeSelectConfirmationMsg,
   makeSelectFeeSpeed,
   makeSelectPsbt,
 
-  makeSelectIsSendComfirmationLocked,
+  makeSelectIsSendConfirmationLocked,
 
   makeSelectSendInProgress,
   makeSelectSendError,

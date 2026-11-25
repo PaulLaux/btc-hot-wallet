@@ -20,18 +20,18 @@ import {
   confirmSendTransactionError,
   sendTransactionSuccess,
   sendTransactionError,
-} from 'containers/SendToken/actions';
+} from 'containers/Send/actions';
 import {
   makeSelectFrom,
   makeSelectTo,
   makeSelectAmount,
   makeSelectFeeSpeed,
   makeSelectPsbt,
-} from 'containers/SendToken/selectors';
+} from 'containers/Send/selectors';
 import {
-  COMFIRM_SEND_TRANSACTION,
+  CONFIRM_SEND_TRANSACTION,
   SEND_TRANSACTION,
-} from 'containers/SendToken/constants';
+} from 'containers/Send/constants';
 
 import {
   timeBetweenCheckbalances,
@@ -273,7 +273,7 @@ function* pollData() {
   }
 }
 
-// Start Polling when first call to checkAllBalances succeded or fails
+// Start Polling when first call to checkAllBalances succeeded or fails
 // Wait for successful response or fail, then fire another request
 // Cancel polling on STOP_POLL_BALANCES
 function* watchPollData() {
@@ -304,7 +304,7 @@ export function* getRates() {
 // Individual exports for testing
 export default function* defaultSaga() {
   yield takeLatest(LOAD_NETWORK, loadNetwork);
-  yield takeLatest(COMFIRM_SEND_TRANSACTION, confirmSendTransaction);
+  yield takeLatest(CONFIRM_SEND_TRANSACTION, confirmSendTransaction);
   yield takeLatest(SEND_TRANSACTION, SendTransaction);
   yield takeLatest(GET_EXCHANGE_RATES, getRates);
 

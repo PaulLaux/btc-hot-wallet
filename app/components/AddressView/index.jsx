@@ -22,9 +22,9 @@ const Div = styled.div`
 function AddressView(props) {
   const {
     generateKeystoreLoading, generateKeystoreError,
-    isComfirmed,
+    isConfirmed,
     addressMap, coin,
-    onShowSendToken, onCheckBalances,
+    onShowSend, onCheckBalances,
     onGenerateAddress,
     networkReady, checkingBalanceDoneTime, checkingBalances, checkingBalancesError,
     addressListLoading, addressListError, addressListMsg,
@@ -36,7 +36,7 @@ function AddressView(props) {
   const addressTableProps = {
     addressMap,
     coin,
-    onShowSendToken,
+    onShowSend,
     exchangeRates,
     onSelectCurrency,
     convertTo,
@@ -49,7 +49,7 @@ function AddressView(props) {
     onCheckBalances,
     networkReady,
 
-    isComfirmed,
+    isConfirmed,
     onGenerateAddress,
     addressListLoading,
     addressListError,
@@ -75,7 +75,7 @@ function AddressView(props) {
     </Div>
   );
 
-  if (isComfirmed) {
+  if (isConfirmed) {
     addressViewContent = (
       <Div>
         <AddressTable {...addressTableProps} />

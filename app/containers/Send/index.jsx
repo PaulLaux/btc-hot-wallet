@@ -1,6 +1,6 @@
 /**
  *
- * SendToken
+ * Send
  *
  */
 
@@ -35,19 +35,19 @@ import {
   makeSelectAmount,
   makeSelectFeeSpeed,
   makeSelectLocked,
-  makeSelectComfirmationLoading,
+  makeSelectConfirmationLoading,
   makeSelectConfirmationError,
   makeSelectConfirmationMsg,
-  makeSelectIsSendComfirmationLocked,
+  makeSelectIsSendConfirmationLocked,
   makeSelectSendInProgress,
   makeSelectSendError,
   makeSelectSendTx,
 } from './selectors';
 
-function SendToken(props) {
+function Send(props) {
   const {
-    isShowSendToken,
-    onHideSendToken,
+    isShowSend,
+    onHideSend,
 
     from,
     to,
@@ -60,10 +60,10 @@ function SendToken(props) {
     onChangeTo,
     feeSpeed,
     onChangeFeeSpeed,
-    comfirmationLoading,
+    confirmationLoading,
     confirmationError,
     confirmationMsg,
-    isSendComfirmationLocked,
+    isSendConfirmationLocked,
     onConfirmSendTransaction,
     onSendTransaction,
     onAbortTransaction,
@@ -81,13 +81,13 @@ function SendToken(props) {
   const SendFeeProps = { feeSpeed, onChangeFeeSpeed, locked };
 
   const SendConfirmationViewProps = {
-    comfirmationLoading,
+    confirmationLoading,
     confirmationError,
     confirmationMsg,
     onSendTransaction,
     onAbortTransaction,
     sendInProgress,
-    isSendComfirmationLocked,
+    isSendConfirmationLocked,
     sendError,
     coin,
   };
@@ -97,7 +97,7 @@ function SendToken(props) {
     <Button key="reset" type="default" size="large" onClick={onAbortTransaction}>
       Reset
     </Button>,
-    <Button key="close" type="default" size="large" onClick={onHideSendToken}>
+    <Button key="close" type="default" size="large" onClick={onHideSend}>
       Close
     </Button>,
   ];
@@ -105,10 +105,10 @@ function SendToken(props) {
   return (
     <div style={{ maxWidth: '600px', margin: 'auto' }}>
       <Modal
-        open={isShowSendToken}
+        open={isShowSend}
         title={`Send ${coin}`}
-        onOk={onHideSendToken}
-        onCancel={onHideSendToken}
+        onOk={onHideSend}
+        onCancel={onHideSend}
         footer={modalFooter}
       >
         <SendFrom {...SendFromProps} /> <br />
@@ -136,11 +136,11 @@ const mapStateToProps = createStructuredSelector({
 
   locked: makeSelectLocked(),
 
-  comfirmationLoading: makeSelectComfirmationLoading(),
+  confirmationLoading: makeSelectConfirmationLoading(),
   confirmationError: makeSelectConfirmationError(),
   confirmationMsg: makeSelectConfirmationMsg(),
 
-  isSendComfirmationLocked: makeSelectIsSendComfirmationLocked(),
+  isSendConfirmationLocked: makeSelectIsSendConfirmationLocked(),
 
   sendInProgress: makeSelectSendInProgress(),
   sendError: makeSelectSendError(),
@@ -179,4 +179,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SendToken);
+export default connect(mapStateToProps, mapDispatchToProps)(Send);

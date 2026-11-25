@@ -40,7 +40,7 @@ function AddressTable(props) {
   const {
     addressMap,
     coin,
-    onShowSendToken,
+    onShowSend,
     exchangeRates,
     onSelectCurrency,
     convertTo,
@@ -96,7 +96,7 @@ function AddressTable(props) {
       <Column
         key="action"
         render={(text, record) => (
-          <a onClick={() => onShowSendToken(record.address)}>Send</a>
+          <a onClick={() => onShowSend(record.address)}>Send</a>
         )}
       />
     </AddrTable >

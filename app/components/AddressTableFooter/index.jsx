@@ -25,7 +25,7 @@ function AddressTableFooter(props) {
     onCheckBalances,
     networkReady,
 
-    isComfirmed,
+    isConfirmed,
     onGenerateAddress,
     addressListLoading,
     addressListError,
@@ -43,7 +43,7 @@ function AddressTableFooter(props) {
         onClick={onGenerateAddress}
         loading={addressListLoading}
         error={addressListError}
-        disabled={!isComfirmed}
+        disabled={!isConfirmed}
         popconfirmMsg={false}
       />
       <IconButton

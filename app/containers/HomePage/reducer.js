@@ -25,8 +25,8 @@ import {
 
   CHANGE_BALANCE,
 
-  SHOW_SEND_TOKEN,
-  HIDE_SEND_TOKEN,
+  SHOW_SEND,
+  HIDE_SEND,
 
   SET_ADDRESSES,
 
@@ -71,7 +71,7 @@ const initialState = {
   userPassword: '',
   restoreWalletError: false,
 
-  isComfirmed: false, // if true then we have a valid keystore
+  isConfirmed: false, // if true then we have a valid keystore
 
   keystore: false,
   chain: false, // the addresses shown are of this chain: a key of chains in utils/bitcoin.js
@@ -84,7 +84,7 @@ const initialState = {
   addressListError: false,
   addressListMsg: false,
 
-  isShowSendToken: false,
+  isShowSend: false,
 
   saveWalletLoading: false,
   saveWalletError: false,
@@ -113,7 +113,7 @@ export default createReducer(initialState, (builder) => builder
     Object.assign(s, {
       keystore: a.keystore,
       seed: false,
-      isComfirmed: true,
+      isConfirmed: true,
       addressListError: false,
       chain: a.chain,
       addressList: a.addressMap,
@@ -121,7 +121,7 @@ export default createReducer(initialState, (builder) => builder
     });
   })
   .addCase(GENERATE_KEYSTORE_ERROR, (s, a) => {
-    Object.assign(s, { generateKeystoreLoading: false, generateKeystoreError: a.error, isComfirmed: false });
+    Object.assign(s, { generateKeystoreLoading: false, generateKeystoreError: a.error, isConfirmed: false });
   })
 
   .addCase(SHOW_RESTORE_WALLET, (s) => {
@@ -133,7 +133,7 @@ export default createReducer(initialState, (builder) => builder
   .addCase(CHANGE_USER_SEED, (s, a) => { s.userSeed = a.userSeed; })
   .addCase(CHANGE_USER_PASSWORD, (s, a) => { s.userPassword = a.password; })
   .addCase(RESTORE_WALLET_FROM_SEED, (s) => {
-    Object.assign(s, { restoreWalletError: false, isComfirmed: false });
+    Object.assign(s, { restoreWalletError: false, isConfirmed: false });
   })
   .addCase(RESTORE_WALLET_FROM_SEED_ERROR, (s, a) => { s.restoreWalletError = a.error; })
   .addCase(RESTORE_WALLET_FROM_SEED_SUCCESS, (s, a) => {
@@ -149,8 +149,8 @@ export default createReducer(initialState, (builder) => builder
     else Object.assign(row, { balance: a.balance, unconfirmed: a.unconfirmed, used: a.used });
   })
 
-  .addCase(SHOW_SEND_TOKEN, (s) => { s.isShowSendToken = true; })
-  .addCase(HIDE_SEND_TOKEN, (s) => { s.isShowSendToken = false; })
+  .addCase(SHOW_SEND, (s) => { s.isShowSend = true; })
+  .addCase(HIDE_SEND, (s) => { s.isShowSend = false; })
 
   .addCase(SET_ADDRESSES, (s, a) => {
     Object.assign(s, { addressListError: false, chain: a.chain, addressList: a.addressMap });

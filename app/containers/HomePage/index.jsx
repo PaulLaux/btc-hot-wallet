@@ -16,7 +16,7 @@ import { createStructuredSelector } from 'reselect';
 
 /* Components:  */
 import AddressView from 'components/AddressView';
-import SendToken from 'containers/SendToken';
+import Send from 'containers/Send';
 import GenerateWalletModal from 'components/GenerateWalletModal';
 import RestoreWalletModal from 'components/RestoreWalletModal';
 import SubHeader from 'components/SubHeader';
@@ -46,8 +46,8 @@ import {
   changeUserSeed,
   changeUserPassword,
   restoreWalletFromSeed,
-  showSendToken,
-  hideSendToken,
+  showSend,
+  hideSend,
   generateAddress,
   lockWallet,
   unlockWallet,
@@ -66,12 +66,12 @@ import {
   makeSelectGenerateKeystoreError,
   makeSelectRestoreWalletError,
   makeSelectPassword,
-  makeSelectIsComfirmed,
+  makeSelectIsConfirmed,
   makeSelectUserSeed,
   makeSelectUserPassword,
   makeSelectAddressMap,
   makeSelectShowRestoreWallet,
-  makeSelectIsShowSendToken,
+  makeSelectIsShowSend,
   makeSelectAddressListLoading,
   makeSelectAddressListError,
   makeSelectAddressListMsg,
@@ -105,7 +105,7 @@ export class HomePage extends React.PureComponent {
       onGenerateKeystore,
       onGenerateAddress,
       onCheckBalances,
-      isComfirmed,
+      isConfirmed,
       addressMap,
       coin,
 
@@ -118,9 +118,9 @@ export class HomePage extends React.PureComponent {
       onRestoreWalletFromSeed,
       onRestoreWalletCancel,
 
-      isShowSendToken,
-      onShowSendToken,
-      onHideSendToken,
+      isShowSend,
+      onShowSend,
+      onHideSend,
 
       addressListLoading,
       addressListError,
@@ -155,7 +155,7 @@ export class HomePage extends React.PureComponent {
     const subHeaderProps = {
       onGenerateWallet,
       onShowRestoreWallet,
-      isComfirmed,
+      isConfirmed,
       onCloseWallet,
       onLockWallet,
       password,
@@ -195,11 +195,11 @@ export class HomePage extends React.PureComponent {
     const addressViewProps = {
       generateKeystoreLoading,
       generateKeystoreError,
-      isComfirmed,
+      isConfirmed,
       addressMap,
       coin,
 
-      onShowSendToken,
+      onShowSend,
 
       onCheckBalances,
       onGenerateAddress,
@@ -219,7 +219,7 @@ export class HomePage extends React.PureComponent {
       getExchangeRatesError,
     };
 
-    const sendTokenProps = { isShowSendToken, onHideSendToken };
+    const sendProps = { isShowSend, onHideSend };
 
     return (
       <div>
@@ -229,7 +229,7 @@ export class HomePage extends React.PureComponent {
           <GenerateWalletModal {...generateWalletProps} />
           <RestoreWalletModal {...restoreWalletModalProps} />
           <AddressView {...addressViewProps} />
-          <SendToken {...sendTokenProps} />
+          <Send {...sendProps} />
         </Content>
         <PageFooter />
       </div>
@@ -284,11 +284,11 @@ export function mapDispatchToProps(dispatch) {
       if (evt !== undefined && evt.preventDefault) evt.preventDefault();
       dispatch(checkBalances());
     },
-    onShowSendToken: (address) => {
-      dispatch(showSendToken(address));
+    onShowSend: (address) => {
+      dispatch(showSend(address));
     },
-    onHideSendToken: () => {
-      dispatch(hideSendToken());
+    onHideSend: () => {
+      dispatch(hideSend());
     },
     onLockWallet: (evt) => {
       if (evt !== undefined && evt.preventDefault) evt.preventDefault();
@@ -328,14 +328,14 @@ const mapStateToProps = createStructuredSelector({
   generateKeystoreLoading: makeSelectGenerateKeystoreLoading(),
   generateKeystoreError: makeSelectGenerateKeystoreError(),
   restoreWalletError: makeSelectRestoreWalletError(),
-  isComfirmed: makeSelectIsComfirmed(),
+  isConfirmed: makeSelectIsConfirmed(),
   addressMap: makeSelectAddressMap(),
   // keystore: makeSelectKeystore(),
   isShowRestoreWallet: makeSelectShowRestoreWallet(),
   userSeed: makeSelectUserSeed(),
   userPassword: makeSelectUserPassword(),
 
-  isShowSendToken: makeSelectIsShowSendToken(),
+  isShowSend: makeSelectIsShowSend(),
 
   addressListLoading: makeSelectAddressListLoading(),
   addressListError: makeSelectAddressListError(),
