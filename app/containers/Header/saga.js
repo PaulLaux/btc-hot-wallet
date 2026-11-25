@@ -72,7 +72,7 @@ import Network from './network';
 
 // Esplora client of the connected network (utils/esplora.js), null when offline
 let net = null;
-// networks checked for used addresses in this session
+// networks checked for used addresses in this session, per wallet: '<vault salt> <network name>'
 const scanned = new Set();
 const usedAddresses = (addresses) => net.usedAddresses(addresses);
 // unused addresses in a row after the last used one that end the restore scan: the gap limit of BIP-44, as in Ledger Live
@@ -99,18 +99,19 @@ function* usedUpTo(seed, chain, branch) {
 
 /**
  * After a restore, find the receive and change addresses the wallet used before (usedUpTo). Runs while the wallet
- * is unlocked (deriving addresses needs the seed), once per network per session. A mistyped passphrase opens a
+ * is unlocked (deriving addresses needs the seed), once per network and wallet per session. A mistyped passphrase opens a
  * valid but empty wallet: warns when a wallet with a passphrase has no used address on a main network.
  * @return {object|null} the keystore with the addresses up to the last used one of each branch, or null if it has them all
  */
 export function* findUsedAddresses(networkName, chain, keystore) {
   const password = yield select(makeSelectPassword());
-  if (!password || scanned.has(networkName)) return null;
+  const id = `${keystore.salt} ${networkName}`; // a wallet restored after Close wallet has another salt
+  if (!password || scanned.has(id)) return null;
   try {
     const seed = yield call(openVault, keystore, password);
     const receive = yield* usedUpTo(seed, chain, 0);
     const change = yield* usedUpTo(seed, chain, 1);
-    scanned.add(networkName);
+    scanned.add(id);
     if (!receive.length && !change.length && keystore.hasPassphrase && chains[chain].coinType !== 1) { // coin type 1: test networks
       message.warning(`No used address on ${networkName}: if this wallet has coins there, check the passphrase`, 15);
     }

@@ -102,9 +102,9 @@ describe('findUsedAddresses', () => {
   const branches = [deriveAddresses(seed, 'test', 0, 60), deriveAddresses(seed, 'test', 0, 60, 1)]; // receive, change
   const [addresses, change] = branches;
   // feeds the password and seed, then the used ones of each block checked (by index, per branch);
-  // returns the result and the size of each block, per branch (network names: once per session)
-  const scan = (networkName, password, used = [[], []]) => {
-    const gen = findUsedAddresses(networkName, 'test', keystore);
+  // returns the result and the size of each block, per branch (network names: once per wallet per session)
+  const scan = (networkName, password, used = [[], []], ks = keystore) => {
+    const gen = findUsedAddresses(networkName, 'test', ks);
     gen.next();
     let step = gen.next(password);
     if (step.done) return { result: step.value }; // locked, or this network was checked already
@@ -138,11 +138,13 @@ describe('findUsedAddresses', () => {
     expect(blocks).toEqual([[20, 3], [20]]);
   });
 
-  it('continues past gaps shorter than 20, once per network', () => {
+  it('continues past gaps shorter than 20, once per network and wallet', () => {
     const { result, blocks } = scan('Bitcoin', 'password', [[0, 19, 38], []]);
     expect(result.addresses.test).toEqual(addresses.slice(0, 39));
     expect(blocks).toEqual([[20, 20, 19], [20]]);
     expect(scan('Bitcoin', 'password').result).toBe(null); // already checked in this session
+    // a wallet restored after Close wallet, in the same tab: checked again
+    expect(scan('Bitcoin', 'password', [[], []], { ...keystore, salt: 'other' }).blocks).toEqual([[20], [20]]);
   });
 
   it('adds the change addresses other wallets used, keeping the receive addresses', () => {
